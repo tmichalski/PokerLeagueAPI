@@ -1,0 +1,20 @@
+{
+  "name": "pokerleagueapi",
+  "version": "1.0.0",
+  "description": "Web services API for the Poker League mobile app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tim Michalski",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.4.0",
+    "body-parser": "^1.15.1",
+    "bookshelf": "^0.9.5",
+    "express": "^4.13.4",
+    "knex": "^0.11.3",
+    "lodash": "^4.12.0",
+    "mysql": "^2.10.2"
+  }
+}
