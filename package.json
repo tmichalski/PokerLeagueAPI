@@ -2,7 +2,7 @@
   "name": "pokerleagueapi",
   "version": "1.0.0",
   "description": "Web services API for the Poker League mobile app",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +12,7 @@
     "bluebird": "^3.4.0",
     "body-parser": "^1.15.1",
     "bookshelf": "^0.9.5",
+    "cors": "^2.7.1",
     "express": "^4.13.4",
     "knex": "^0.11.3",
     "lodash": "^4.12.0",

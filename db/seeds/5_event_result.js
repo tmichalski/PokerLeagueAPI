@@ -9,6 +9,13 @@ exports.seed = function (knex, Promise) {
         knex('event_result').insert({event_id: 1, user_id: 3, amount: -15.25}),
         knex('event_result').insert({event_id: 1, user_id: 4, amount: -125.50}),
         knex('event_result').insert({event_id: 1, user_id: 5, amount: -210.75}),
-        knex('event_result').insert({event_id: 1, user_id: 6, amount: 5.00})
+        knex('event_result').insert({event_id: 1, user_id: 6, amount: 5.00}),
+
+        knex('event_result').insert({event_id: 2, user_id: 1, amount: 35.50}),
+        knex('event_result').insert({event_id: 2, user_id: 2, amount: 45.00}),
+        knex('event_result').insert({event_id: 2, user_id: 3, amount: -115.25}),
+        knex('event_result').insert({event_id: 2, user_id: 4, amount: 225.50}),
+        knex('event_result').insert({event_id: 2, user_id: 5, amount: -50.75}),
+        knex('event_result').insert({event_id: 2, user_id: 6, amount: -54.00})
     );
 };

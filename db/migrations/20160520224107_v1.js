@@ -17,7 +17,8 @@ exports.up = function(knex, Promise) {
             table.increments("id").primary();
             table.integer("year").notNullable();
             table.boolean("is_active").notNullable();
-            table.integer("winner_user_id").unsigned().nullable().references("user.id");
+            table.integer("first_place_user_id").unsigned().nullable().references("user.id");
+            table.decimal("first_place_winnings", 7, 2).nullable();
             table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
             table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();
         }),
@@ -38,7 +39,7 @@ exports.up = function(knex, Promise) {
             table.increments("id").primary();
             table.integer("event_id").unsigned().notNullable().references("event.id");
             table.integer("user_id").unsigned().notNullable().references("user.id");
-            table.decimal("amount", 5, 2).notNullable();
+            table.decimal("amount", 7, 2).notNullable();
             table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
             table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();
         }),
