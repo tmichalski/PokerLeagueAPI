@@ -11,13 +11,16 @@ const userService = require('../services/userService');
 // after authentication.
 passport.use(new BearerStrategy(
     function(token, cb) {
-        var user = userService.getByToken(token);
-        if (!user) {
-            return cb("No user found for the given token");
-        }
+        userService.getByToken(token)
+            .then(user => {
+                    if (!user) {
+                        return cb("No user found for the given token");
+                    }
 
-        return cb(null, user);
+                    return cb(null, user);
+            })
     })
 );
+
 
 module.exports = passport;
