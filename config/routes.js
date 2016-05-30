@@ -1,3 +1,4 @@
+const passport = require('../config/passport');
 const userController = require('../controllers/userController');
 const seasonController = require('../controllers/seasonController');
 
@@ -9,12 +10,15 @@ const apiRoutes = function apiRoutes(app) {
     });
 
     // Users
-    app.use('/users', userController.listAll);
+    app.get('/users', userController.list);
     //app.use('/users/:id', userController.get);
 
     // Seasons
-    app.use('/seasons/:id', seasonController.get);
-    app.use('/seasons', seasonController.listAll);
+    app.get('/seasons', passport.authenticate('bearer', {session: false}), seasonController.list);
+    app.post('/seasons', seasonController.add);
+    app.get('/seasons/:id', seasonController.get);
+    app.post('/seasons/:id', seasonController.update);
+    app.delete('/seasons/:id', seasonController.delete);
 
 };
 

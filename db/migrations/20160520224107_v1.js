@@ -7,7 +7,30 @@ exports.up = function(knex, Promise) {
             table.increments("id").primary();
             table.string("nickname").notNullable();
             table.string("full_name").notNullable();
+            table.string("token").nullable();
             table.boolean("is_visitor").notNullable();
+            table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();
+        }),
+
+        // LEAGUE
+        knex.schema.createTable("league", function(table) {
+            table.increments("id").primary();
+            table.string("name").notNullable();
+            table.string("access_code").notNullable();
+            table.boolean("is_deleted").defaultTo(false).notNullable();
+            table.integer("created_by_user_id").unsigned().notNullable();
+            table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();
+        }),
+
+        // LEAGUE USER
+        knex.schema.createTable("league_user", function(table) {
+            table.increments("id").primary();
+            table.integer("league_id").unsigned().notNullable().references("league.id");
+            table.integer("user_id").unsigned().notNullable().references("user.id");
+            table.boolean("is_admin").defaultTo(false).notNullable();
+            table.boolean("is_deleted").defaultTo(false).notNullable();
             table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
             table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();
         }),
@@ -15,8 +38,10 @@ exports.up = function(knex, Promise) {
         // SEASON
         knex.schema.createTable("season", function(table) {
             table.increments("id").primary();
+            table.integer("league_id").unsigned().notNullable().references("league.id");
             table.integer("year").notNullable();
             table.boolean("is_active").notNullable();
+            table.boolean("is_deleted").defaultTo(false).notNullable();
             table.integer("first_place_user_id").unsigned().nullable().references("user.id");
             table.decimal("first_place_winnings", 7, 2).nullable();
             table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
@@ -63,6 +88,8 @@ exports.down = function(knex, Promise) {
         knex.schema.dropTable("event_note"),
         knex.schema.dropTable("event"),
         knex.schema.dropTable("season"),
+        knex.schema.dropTable("league_user"),
+        knex.schema.dropTable("league"),
         knex.schema.dropTable("user")
     ]);
 };

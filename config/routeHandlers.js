@@ -9,8 +9,8 @@ const routeHandlers = function routeHandlers(app) {
     // Handle POST body parsing
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(bodyParser.json());
-
-    // Test interceptor
+    
+    // Echo interceptor
     app.use(function(req, res, next) {
         console.log('Processing request: ' + req.originalUrl);
         next();
