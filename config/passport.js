@@ -10,14 +10,17 @@ const userService = require('../services/userService');
 // `cb` with a user object, which will be set at `req.user` in route handlers
 // after authentication.
 passport.use(new BearerStrategy(
-    function(token, cb) {
-        var user = userService.getByToken(token);
-        if (!user) {
-            return cb("No user found for the given token");
-        }
+    function(token, done) {
+        userService.getByToken(token)
+            .then(user => {
+                    if (!user) {
+                        return done("No user found for the given token");
+                    }
 
-        return cb(null, user);
+                    return done(null, user);
+            })
     })
 );
+
 
 module.exports = passport;
