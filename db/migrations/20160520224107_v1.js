@@ -5,10 +5,10 @@ exports.up = function(knex, Promise) {
         // USER
         knex.schema.createTable("user", function(table) {
             table.increments("id").primary();
-            table.string("nickname").notNullable();
-            table.string("full_name").notNullable();
-            table.string("token").nullable();
-            table.boolean("is_visitor").notNullable();
+            table.string("name").notNullable();
+            table.string("email").notNullable();
+            table.string("facebook_id").nullable();
+            table.string("facebook_token").nullable();
             table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
             table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();
         }),

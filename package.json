@@ -14,10 +14,14 @@
     "bookshelf": "^0.9.5",
     "cors": "^2.7.1",
     "express": "^4.13.4",
+    "jwt-async": "^1.1.2",
     "knex": "^0.11.3",
     "lodash": "^4.12.0",
     "mysql": "^2.10.2",
+    "node-uuid": "^1.4.7",
     "passport": "^0.3.2",
-    "passport-http-bearer": "^1.0.1"
+    "passport-jwt": "^2.0.0",
+    "request": "^2.72.0",
+    "url": "^0.11.0"
   }
 }

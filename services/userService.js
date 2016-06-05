@@ -1,11 +1,12 @@
 'use strict';
 
 const User = require('../models/user');
+const uuid = require('node-uuid');
 
 var service = {
 
     get: function (id) {
-        User.forge({id: id, is_deleted: false})
+        return User.forge({id: id})
             .fetch()
             .then(function (user) {
                 return user;
@@ -17,13 +18,8 @@ var service = {
             });
     },
 
-    getByToken: function(token) {
-        return User.forge({token: token})
-            .fetch()
-            .catch(function (error) {
-                console.log("userService.getByToken(id): error fetching user.");
-                console.log(error);
-            });
+    list: function () {
+        return User.where({isDeleted: false}).fetchAll();
     }
 
 };

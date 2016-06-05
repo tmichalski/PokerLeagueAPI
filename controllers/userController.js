@@ -1,11 +1,11 @@
 'use strict';
 
-const User = require('../models/user');
+const userService = require('../services/userService');
 
 var controller = {
 
     list: function(req, res) {
-        User.fetchAll().then(function (users) {
+        userService.list().then(function (users) {
             res.json(users);
         })
     }
