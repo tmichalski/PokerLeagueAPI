@@ -16,7 +16,6 @@ function login(shortLivedToken) {
         .then(getLongLivedTokenFromFacebook)
         .then(getUserInfoFromFacebook)
         .then(findOrCreateUser)
-        .then(generateJwtToken)
 }
 
 function doesAppIdInTokenMatchOurAppId(shortLivedToken) {
@@ -63,7 +62,9 @@ function findOrCreateUser(userInfo) {
             if (user) {
                 user.set('facebook_id', userInfo.id);
                 user.set('facebook_token', userInfo.longLivedToken);
-                return user.save().catch(function(error) { console.log(error) });
+                return user.save().catch(function (error) {
+                    console.log(error)
+                });
             } else {
                 return User.forge({
                     email: userInfo.email,
@@ -71,11 +72,9 @@ function findOrCreateUser(userInfo) {
                     name: userInfo.name,
                     facebook_id: userInfo.id,
                     facebook_token: userInfo.longLivedToken
-                }).save().catch(function(error) { console.log(error) });
+                }).save().catch(function (error) {
+                    console.log(error)
+                });
             }
         });
-}
-
-function generateJwtToken(user) {
-    return passportService.generateToken(user);
 }

@@ -30,6 +30,7 @@ exports.up = function(knex, Promise) {
             table.integer("league_id").unsigned().notNullable().references("league.id");
             table.integer("user_id").unsigned().notNullable().references("user.id");
             table.boolean("is_admin").defaultTo(false).notNullable();
+            table.boolean("is_active").defaultTo(true).notNullable();
             table.boolean("is_deleted").defaultTo(false).notNullable();
             table.timestamp("created_dtm").defaultTo(knex.raw('NOW()')).notNullable();
             table.timestamp("last_updated_dtm").defaultTo(knex.raw('NOW()')).notNullable();

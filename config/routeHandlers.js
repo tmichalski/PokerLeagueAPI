@@ -15,6 +15,7 @@ const routeHandlers = function routeHandlers(app) {
         console.log('Processing request: ' + req.originalUrl);
         next();
     });
+    
 };
 
 module.exports = routeHandlers;

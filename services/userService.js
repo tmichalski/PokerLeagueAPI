@@ -1,6 +1,7 @@
 'use strict';
 
 const User = require('../models/user');
+const LeagueUser = require('../models/leagueUser');
 const uuid = require('node-uuid');
 
 var service = {
@@ -16,6 +17,10 @@ var service = {
                 console.log(error);
                 return null;
             });
+    },
+
+    listLeagues: function(userId) {
+        return LeagueUser.where({user_id: userId, is_active: true, is_deleted: false}).fetchAll();
     },
 
     list: function () {
