@@ -32,7 +32,7 @@ function getSeason(user, seasonId) {
             .andWhere('league_user.is_deleted', false)
             .andWhere('league_user.is_active', true)
         })
-        .fetch({withRelated: ['firstPlaceUser', 'events.hostUser']})
+        .fetch({withRelated: ['firstPlaceUser', 'events.hostUser', 'league']})
         .then(_queryForRankings)
         .then(_packageResults);
 
@@ -195,6 +195,7 @@ function marshallSeason(season) {
     return {
         id: season.get('id'),
         year: season.get('year'),
+        league: marshallLeague(season.related('league')),
         isActive: season.get('is_active') ? true : false,
         firstPlaceUser: marshallUser(season.related('firstPlaceUser')),
         firstPlaceWinnings: season.get('first_place_winnings'),
@@ -219,6 +220,14 @@ function marshallEvent(event) {
         eventDate: event.get('event_date'),
         hostUser: marshallUser(event.related('hostUser'))
     };
+}
+
+function marshallLeague(league) {
+    if (!league.has('id')) return;
+    return {
+        id: league.get('id'),
+        name: league.get('name')
+    }
 }
 
 function marshallUser(user) {
