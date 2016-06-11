@@ -4,9 +4,9 @@ exports.seed = function (knex, Promise) {
         knex('season').del(),
 
         // Inserts seed entries
-        knex('season').insert({league_id: 1, year: 2013, is_active: false, is_deleted: false, first_place_user_id: 1, first_place_winnings: 320.50}),
-        knex('season').insert({league_id: 1, year: 2014, is_active: false, is_deleted: false, first_place_user_id: 2, first_place_winnings: 150.00}),
-        knex('season').insert({league_id: 1, year: 2015, is_active: false, is_deleted: false, first_place_user_id: 3, first_place_winnings: 55.25}),
-        knex('season').insert({league_id: 1, year: 2016, is_active: true, is_deleted: false, first_place_user_id: 4, first_place_winnings: 2240.00})
+        knex('season').insert({leagueId: 1, year: 2013, isActive: false, isDeleted: false, firstPlaceUserId: 1, firstPlaceWinnings: 320.50}),
+        knex('season').insert({leagueId: 1, year: 2014, isActive: false, isDeleted: false, firstPlaceUserId: 2, firstPlaceWinnings: 150.00}),
+        knex('season').insert({leagueId: 1, year: 2015, isActive: false, isDeleted: false, firstPlaceUserId: 3, firstPlaceWinnings: 55.25}),
+        knex('season').insert({leagueId: 1, year: 2016, isActive: true, isDeleted: false, firstPlaceUserId: 4, firstPlaceWinnings: 2240.00})
     );
 };

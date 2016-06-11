@@ -17,8 +17,8 @@ const apiRoutes = function apiRoutes(app) {
     app.post('/login', loginController.login);
 
     // Users
-    app.get('/users',           authFilters,     userController.list);
-    //app.use('/users/:id', passportService.auth(),     userController.get);
+    app.get('/users',           authFilters,            userController.list);
+    app.use('/users/:id',       authFilters,            userController.get);
 
     // Seasons
     app.get('/seasons',         authFilters,     seasonController.list);

@@ -16,34 +16,34 @@ module.exports = {
 function getSeason(user, seasonId) {
     var params = {'id': seasonId};
     if ('latest' == seasonId) {
-        params = {'is_active': true};
+        params = {'isActive': true};
     }
 
     return Season.forge(params).query(function (q) {
             q.innerJoin('league', function () {
-                this.on('season.league_id', '=', 'league.id')
+                this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('league_user', function () {
-                this.on('league.id', '=', 'league_user.league_id')
-                    .andOn('league_user.user_id', '=', user.id)
+            .innerJoin('leagueUser', function () {
+                this.on('league.id', '=', 'leagueUser.leagueId')
+                    .andOn('leagueUser.userId', '=', user.id)
             })
-            .where('season.is_deleted', false)
-            .andWhere('league.is_deleted', false)
-            .andWhere('league_user.is_deleted', false)
-            .andWhere('league_user.is_active', true)
+            .where('season.isDeleted', false)
+            .andWhere('league.isDeleted', false)
+            .andWhere('leagueUser.isDeleted', false)
+            .andWhere('leagueUser.isActive', true)
         })
         .fetch({withRelated: ['firstPlaceUser', 'events.hostUser', 'league']})
         .then(_queryForRankings)
         .then(_packageResults);
 
     function _queryForRankings(season) {
-        return Bookshelf.knex.select('user.*').sum('event_result.amount as winnings')
-            .from('event_result')
-            .innerJoin('user', 'event_result.user_id', 'user.id')
-            .innerJoin('event', 'event_result.event_id', 'event.id')
-            .innerJoin('season', 'event.season_id', 'season.id')
+        return Bookshelf.knex.select('user.*').sum('eventResult.amount as winnings')
+            .from('eventResult')
+            .innerJoin('user', 'eventResult.userId', 'user.id')
+            .innerJoin('event', 'eventResult.eventId', 'event.id')
+            .innerJoin('season', 'event.seasonId', 'season.id')
             .where('season.id', season.get('id'))
-            .groupBy('event_result.user_id')
+            .groupBy('eventResult.userId')
             .orderBy('winnings', 'desc')
             .then(rankings => {
                 return [season, rankings]
@@ -52,7 +52,7 @@ function getSeason(user, seasonId) {
 
     function _packageResults(seasonAndRankingsArray) {
         var [seasonRow, rankingsRows] = seasonAndRankingsArray;
-        var season = marshallSeason(seasonRow);
+        var season = seasonRow.serialize();
         season.rankings = marshallRankings(rankingsRows);
         return season;
     }
@@ -61,29 +61,26 @@ function getSeason(user, seasonId) {
 function listSeasons(user) {
     return Season.query(function (q) {
             q.innerJoin('league', function () {
-                this.on('season.league_id', '=', 'league.id')
+                this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('league_user', function () {
-                this.on('league.id', '=', 'league_user.league_id')
-                    .andOn('league_user.user_id', '=', user.id)
+            .innerJoin('leagueUser', function () {
+                this.on('league.id', '=', 'leagueUser.leagueId')
+                    .andOn('leagueUser.userId', '=', user.id)
             })
-            .where('season.is_deleted', false)
-            .andWhere('league.is_deleted', false)
-            .andWhere('league_user.is_deleted', false)
-            .andWhere('league_user.is_active', true)
+            .where('season.isDeleted', false)
+            .andWhere('league.isDeleted', false)
+            .andWhere('leagueUser.isDeleted', false)
+            .andWhere('leagueUser.isActive', true)
         })
         .orderBy('year', 'DESC')
-        .fetchAll({withRelated: ['firstPlaceUser']})
-        .then(seasons => {
-            return marshallSeasons(seasons);
-        });
+        .fetchAll({withRelated: ['firstPlaceUser']});
 }
 
 function addSeason(user, year, isActive) {
     return leagueService.getActiveLeague(user)
         .then(leagueUser => {
             if (leagueUser) {
-                return _save(leagueUser.league_id, year, isActive);
+                return _save(leagueUser.leagueId, year, isActive);
             } else {
                 return null;
             }
@@ -91,14 +88,11 @@ function addSeason(user, year, isActive) {
 
     function _save(leagueId, year, isActive) {
         return new Season({
-                league_id: leagueId,
+                leagueId: leagueId,
                 year: year,
-                is_active: isActive || false
+                isActive: isActive || false
             })
             .save()
-            .then(season => {
-                return marshallSeason(season);
-            })
     }
 }
 
@@ -115,10 +109,10 @@ function updateSeason(user, seasonId, year, isActive) {
 
     function _save(seasonId, year, isActive) {
         return Season.forge({id: seasonId})
-            .save({year: year, is_active: isActive})
+            .save({year: year, isActive: isActive})
             .then(function () {
                 if (isActive) {
-                    Bookshelf.knex.raw('UPDATE season SET is_active = false WHERE id != ?', [seasonId])
+                    Bookshelf.knex.raw('UPDATE season SET isActive = false WHERE id != ?', [seasonId])
                         .then(function (resp) {
                             // Do nothing
                         })
@@ -139,21 +133,21 @@ function deleteSeason(user, seasonId) {
     return getSeasonForActiveLeagueUser(seasonId, user.id)
         .then(season => {
             if (season) {
-                return _delete(seasonId);
+                return Delete(seasonId);
             } else {
                 return null;
             }
         });
 
-    function _delete(seasonId) {
+    function Delete(seasonId) {
         return Season.forge({id: seasonId})
-            .save({is_deleted: true, is_active: false})
+            .save({isDeleted: true, isActive: false})
             .then(function (season) {
                 // If the season was active, then find the highest not deleted year value and set that as active.
                 if (isActive) {
                     Bookshelf.knex.raw(
-                        'UPDATE season SET is_active = true ' +
-                        'WHERE id != ? AND is_deleted = false AND year = (SELECT MAX(year) FROM season)', [seasonId])
+                        'UPDATE season SET isActive = true ' +
+                        'WHERE id != ? AND isDeleted = false AND year = (SELECT MAX(year) FROM season)', [seasonId])
                         .then(function (resp) {
                             // Do nothing to invoke the raw statement
                         })
@@ -169,75 +163,18 @@ function deleteSeason(user, seasonId) {
 function getSeasonForActiveLeagueUser(seasonId, userId) {
     return Season.forge({id: seasonId}).query(function (q) {
             q.innerJoin('league', function () {
-                this.on('season.league_id', '=', 'league.id')
+                this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('league_user', function () {
-                this.on('league.id', '=', 'league_user.league_id')
-                    .andOn('league_user.user_id', '=', userId)
+            .innerJoin('leagueUser', function () {
+                this.on('league.id', '=', 'leagueUser.leagueId')
+                    .andOn('leagueUser.userId', '=', userId)
             })
-            .where('season.is_deleted', false)
-            .andWhere('league.is_deleted', false)
-            .andWhere('league_user.is_deleted', false)
-            .andWhere('league_user.is_active', true)
+            .where('season.isDeleted', false)
+            .andWhere('league.isDeleted', false)
+            .andWhere('leagueUser.isDeleted', false)
+            .andWhere('leagueUser.isActive', true)
     })
     .fetch();
-}
-
-function marshallSeasons(seasons) {
-    var out = [];
-    _(seasons.models).each(function (season) {
-        out.push(marshallSeason(season));
-    });
-    return out;
-}
-
-function marshallSeason(season) {
-    return {
-        id: season.get('id'),
-        year: season.get('year'),
-        league: marshallLeague(season.related('league')),
-        isActive: season.get('is_active') ? true : false,
-        firstPlaceUser: marshallUser(season.related('firstPlaceUser')),
-        firstPlaceWinnings: season.get('first_place_winnings'),
-        events: marshallEvents(season.related('events').models)
-    };
-}
-
-function marshallEvents(events) {
-    if (events.length == 0) return;
-    var out = [];
-    _(events).each(event => {
-        out.push(marshallEvent(event));
-    });
-    return out;
-}
-
-function marshallEvent(event) {
-    if (!event.has('id')) return;
-    return {
-        id: event.get('id'),
-        name: event.get('name'),
-        eventDate: event.get('event_date'),
-        hostUser: marshallUser(event.related('hostUser'))
-    };
-}
-
-function marshallLeague(league) {
-    if (!league.has('id')) return;
-    return {
-        id: league.get('id'),
-        name: league.get('name')
-    }
-}
-
-function marshallUser(user) {
-    if (!user.has('id')) return;
-    return {
-        id: user.get('id'),
-        nickname: user.get('nickname'),
-        fullName: user.get('full_name'),
-        isVisitor: user.get('is_visitor') ? true : false
-    }
 }
 
 function marshallRankings(ranking) {
@@ -248,9 +185,7 @@ function marshallRankings(ranking) {
             rank: i + 1,
             user: {
                 id: rank.id,
-                nickname: rank.nickname,
-                fullName: rank.full_name,
-                isVisitor: !!rank.is_visitor
+                name: rank.name
             },
             winnings: rank.winnings
         });

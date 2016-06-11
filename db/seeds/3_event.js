@@ -4,8 +4,8 @@ exports.seed = function (knex, Promise) {
         knex('event').del(),
 
         // Inserts seed entries
-        knex('event').insert({season_id: 1, host_user_id: 1, name: 'Kickoff', event_date: '2013-01-15'}),
-        knex('event').insert({season_id: 1, host_user_id: 2, name: 'Winter Blitz', event_date: '2013-02-05'}),
-        knex('event').insert({season_id: 1, host_user_id: 3, name: 'Springtime', event_date: '2013-03-25'})
+        knex('event').insert({seasonId: 1, hostUserId: 1, name: 'Kickoff', eventDate: '2013-01-15'}),
+        knex('event').insert({seasonId: 1, hostUserId: 2, name: 'Winter Blitz', eventDate: '2013-02-05'}),
+        knex('event').insert({seasonId: 1, hostUserId: 3, name: 'Springtime', eventDate: '2013-03-25'})
     );
 };

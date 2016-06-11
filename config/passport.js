@@ -11,7 +11,7 @@ passport.use(new JwtStrategy({
         secretOrKey: jwtConfig.secret
     },
     function (jwt_payload, done) {
-        userService.get(jwt_payload.id)
+        userService.getByUserId(jwt_payload.id)
             .then(user => user ? done(null, user) : done(null, false))
             .catch(error => done(err, false));
     })

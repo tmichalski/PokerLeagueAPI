@@ -4,13 +4,13 @@ exports.seed = function (knex, Promise) {
         knex('league').del(),
 
         // Inserts seed entries
-        knex('league').insert({name: "CRB Poker", access_code: "ABC123", is_deleted: false, created_by_user_id: 1}),
+        knex('league').insert({name: "CRB Poker", accessCode: "ABC123", isDeleted: false, createdByUserId: 1}),
 
-        knex('league_user').insert({league_id: 1, user_id: 1, is_admin: true, is_active: true, is_deleted: false}),
-        knex('league_user').insert({league_id: 1, user_id: 2, is_admin: false, is_active: true, is_deleted: false}),
-        knex('league_user').insert({league_id: 1, user_id: 3, is_admin: false, is_active: true, is_deleted: false}),
-        knex('league_user').insert({league_id: 1, user_id: 4, is_admin: false, is_active: true, is_deleted: false}),
-        knex('league_user').insert({league_id: 1, user_id: 5, is_admin: false, is_active: true, is_deleted: false}),
-        knex('league_user').insert({league_id: 1, user_id: 6, is_admin: false, is_active: true, is_deleted: false})
+        knex('leagueUser').insert({leagueId: 1, userId: 1, isAdmin: true, isActive: true, isDeleted: false}),
+        knex('leagueUser').insert({leagueId: 1, userId: 2, isAdmin: false, isActive: true, isDeleted: false}),
+        knex('leagueUser').insert({leagueId: 1, userId: 3, isAdmin: false, isActive: true, isDeleted: false}),
+        knex('leagueUser').insert({leagueId: 1, userId: 4, isAdmin: false, isActive: true, isDeleted: false}),
+        knex('leagueUser').insert({leagueId: 1, userId: 5, isAdmin: false, isActive: true, isDeleted: false}),
+        knex('leagueUser').insert({leagueId: 1, userId: 6, isAdmin: false, isActive: true, isDeleted: false})
     );
 };

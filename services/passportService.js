@@ -1,9 +1,9 @@
 'use strict';
 
-const Promise = require('bluebird');
 const JWT = require('jwt-async');
-const jwtConfig = require('../config/jwt');
+const Promise = require('bluebird');
 const jwt = Promise.promisifyAll(new JWT());
+const jwtConfig = require('../config/jwt');
 jwt.setSecret(jwtConfig.secret);
 
 const passport = require('../config/passport');

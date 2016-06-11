@@ -60,8 +60,8 @@ function findOrCreateUser(userInfo) {
     return User.where('email', userInfo.email).fetch()
         .then(user => {
             if (user) {
-                user.set('facebook_id', userInfo.id);
-                user.set('facebook_token', userInfo.longLivedToken);
+                user.set('facebookId', userInfo.id);
+                user.set('facebookToken', userInfo.longLivedToken);
                 return user.save().catch(function (error) {
                     console.log(error)
                 });
@@ -70,8 +70,8 @@ function findOrCreateUser(userInfo) {
                     email: userInfo.email,
                     //password: uuid.v1(),
                     name: userInfo.name,
-                    facebook_id: userInfo.id,
-                    facebook_token: userInfo.longLivedToken
+                    facebookId: userInfo.id,
+                    facebookToken: userInfo.longLivedToken
                 }).save().catch(function (error) {
                     console.log(error)
                 });

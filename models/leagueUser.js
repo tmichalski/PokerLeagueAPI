@@ -3,14 +3,16 @@
 const bookshelf = require('../db/bookshelf');
 
 var leagueUser = bookshelf.Model.extend({
-    tableName: 'league_user',
+    tableName: 'leagueUser',
+
+    visible: ['isAdmin', 'isActive', 'league', 'user'],
 
     league: function() {
-        return this.belongsTo('League');
+        return this.belongsTo('League', 'leagueId');
     },
 
     user: function() {
-        return this.belongsTo('User');
+        return this.belongsTo('User', 'userId');
     }
 
 });

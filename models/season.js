@@ -5,16 +5,18 @@ const bookshelf = require('../db/bookshelf');
 var season = bookshelf.Model.extend({
     tableName: 'season',
 
+    visible: ['id', 'year', 'isActive', 'firstPlaceWinnings', 'firstPlaceUser', 'league', 'events'],
+
     firstPlaceUser: function() {
-        return this.belongsTo('User', "first_place_user_id");
+        return this.belongsTo('User', "firstPlaceUserId");
     },
 
     league: function() {
-        return this.belongsTo('League');
+        return this.belongsTo('League', 'leagueId');
     },
 
     events: function() {
-        return this.hasMany('Event')
+        return this.hasMany('Event', 'seasonId')
     }
 });
 
