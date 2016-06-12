@@ -1,6 +1,9 @@
 # PokerLeagueAPI
 Web services API for the PokerLeague mobile app.
 
+## PokerLeage Mobile App Project
+This project, PokerLeagueAPI, is the web services platform that drives the PokerLeague mobile app. Check out the Ionic/Cordova mobile app for this API at https://github.com/tmichalski/PokerLeague/.
+
 ## Coding Standards
 Following the coding standards for the following core frameworks of this app. 
 * [NodeJS](https://nodejs.org/en/) - Javscript Engine
