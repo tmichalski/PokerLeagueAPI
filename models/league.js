@@ -7,6 +7,11 @@ var league = bookshelf.Model.extend({
 
     visible: ['id', 'name', 'accessCode', 'season', 'leagueUsers'],
 
+    parse : function (response) {
+        response.isActive = !!response.isActive;
+        return response;
+    },
+
     seasons: function() {
         return this.hasMany('Season', 'seasonId')
     },

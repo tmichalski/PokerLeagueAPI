@@ -7,6 +7,13 @@ var leagueUser = bookshelf.Model.extend({
 
     visible: ['isAdmin', 'isActive', 'league', 'user'],
 
+    parse : function (response) {
+        response.isAdmin = !!response.isAdmin;
+        response.isActive = !!response.isActive;
+        response.isDeleted = !!response.isDeleted;
+        return response;
+    },
+
     league: function() {
         return this.belongsTo('League', 'leagueId');
     },

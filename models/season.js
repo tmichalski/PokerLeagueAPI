@@ -7,6 +7,12 @@ var season = bookshelf.Model.extend({
 
     visible: ['id', 'year', 'isActive', 'firstPlaceWinnings', 'firstPlaceUser', 'league', 'events'],
 
+    parse : function (response) {
+        response.isActive = !!response.isActive;
+        response.isDeleted = !!response.isDeleted;
+        return response;
+    },
+
     firstPlaceUser: function() {
         return this.belongsTo('User', "firstPlaceUserId");
     },
