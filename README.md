@@ -92,8 +92,8 @@ Run using stock NodeJS
     * Working directory: <path to your project> (ie /Users/tim/Documents/workspace/PokerLeagueAPI)
     * JavaScript file: server.js
     * Environment Variables:
-      * FACEBOOK_APP_ID: <get your own or ask @tmichalski>
-      * FACEBOOK_APP_SECRET: <get your own or ask @tmichalski>
+      * FACEBOOK_APP_ID: *get your own or ask @tmichalski*
+      * FACEBOOK_APP_SECRET: *get your own or ask @tmichalski*
   * Click "Ok" to save
   * Repeat this setup for each platform by changing the "Name" and "Platform" variables.
 * In the "Run" drop-down list in the main toolbar, select your run option and click the green "Play" button to launch the app. 
