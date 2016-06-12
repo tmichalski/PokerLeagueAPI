@@ -30,7 +30,7 @@ Create a MySQL database and user called "pokerleague" to match the database conf
 The database tables/seed migration scripts rely on the Knex API. 
 
 Install the Knex command line npm module before executing the following commands.
-> ```npm install -g knex```
+> ```$ npm install -g knex```
 
 Generate tables
 > ```$ cd /my/workspace/PokerLeagueAPI/db```
@@ -40,12 +40,12 @@ Generate tables
 Load seed data for testing
 > ```$ cd /my/workspace/PokerLeagueAPI/db```
 
-> ```knex seed:run```
+> ```$ knex seed:run```
 
 Drop Tables
 > ```$ cd /my/workspace/PokerLeagueAPI/db```
 
-> ```knex migrate:rollback```
+> ```$ knex migrate:rollback```
 
 
 #### Setup App
