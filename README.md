@@ -82,7 +82,8 @@ Run using stock NodeJS
 ### IDE: JetBrains WebStorm / IntelliJ IDEA
 * IntellJ IDE > Preferences > Plugins > Browse Repositories...  and install the following plugins:
   * NodeJS
-* Run > Edit Configurations
+* Nodemon Run Configuration: 
+  * Run > Edit Configurations
   * Click the "+" sign to add a new configuration
   * Choose "NodeJS" from the "+" drop-down list
   * Enter the following options
@@ -95,6 +96,23 @@ Run using stock NodeJS
       * FACEBOOK_APP_ID: *get your own or ask @tmichalski*
       * FACEBOOK_APP_SECRET: *get your own or ask @tmichalski*
   * Click "Ok" to save
-  * Repeat this setup for each platform by changing the "Name" and "Platform" variables.
-* In the "Run" drop-down list in the main toolbar, select your run option and click the green "Play" button to launch the app. 
+* Node Run Configuration: 
+  * Run > Edit Configurations
+  * Click the "+" sign to add a new configuration
+  * Choose "NodeJS" from the "+" drop-down list
+  * Enter the following options
+    * Name: Node
+    * Node interpreter: /usr/local/bin/node (Project) <-- choose in drop-down, should be default
+    * Working directory: <path to your project> (ie /Users/tim/Documents/workspace/PokerLeagueAPI)
+    * JavaScript file: server.js
+    * Environment Variables:
+      * FACEBOOK_APP_ID: *get your own or ask @tmichalski*
+      * FACEBOOK_APP_SECRET: *get your own or ask @tmichalski*
+  * Click "Ok" to save
+* PLAY/RUN:
+  * In the "Run" drop-down list in the main toolbar, select your run option and click the green "Play" button to launch the app. 
   * Be sure the PokerLeagueAPI app is running and listening on whatever hostname:port is configured in */www/app/app.config.js*
+* DEBUG:
+  * Click the bug icon instead of the green triangle play button to initiate debug
+  * Use "Node" run configuration for debug  
+  * Nodemon doesn't play nice with IntelliJ/WebStorm Debug mode
