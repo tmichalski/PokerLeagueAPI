@@ -14,7 +14,20 @@ Read up on Promise Anti-Patterns (AND AVOID THESE!)
 * http://taoofcode.net/promise-anti-patterns/
 
 ## Developer Setup
-### Setup Env
+### Setup Database
+Install [MySQL](http://dev.mysql.com/downloads/mysql/) database
+
+Install [MySQL Workbench](http://dev.mysql.com/downloads/workbench/)
+
+Create a MySQL database and user called "pokerleague" to match the database configuration found in */db/knexfile.js*
+> ```connection: {
+        host: '127.0.0.1',
+        user: 'pokerleague',
+        password: 'pokerleague',
+        database: 'pokerleague'
+    }```
+
+### Setup App
 
 Install [Node Package Manager (npm)](https://www.npmjs.com)
 
@@ -32,7 +45,7 @@ Install [Nodemon](http://nodemon.io) for live reload
 > ```$ npm install -g nodemon```
 
 ### Run App
-Be sure the PokerLeagueAPI app is running and listening on whatever hostname:port is configured in /www/app/app.config.js
+Be sure you have setup your local database and configured it within */db/knexfile.js*
 
 ## App Config
 * Application config params are stored in */www/app/app.config.js*
