@@ -27,6 +27,27 @@ Create a MySQL database and user called "pokerleague" to match the database conf
         database: 'pokerleague'
     }```
 
+The database tables/seed migration scripts rely on the Knex API. 
+
+Install the Knex command line npm module before executing the following commands.
+> ```npm install -g knex```
+
+Generate tables
+> ```$ cd /my/workspace/PokerLeagueAPI/db```
+
+> ```$ knex migrate:latest```
+
+Load seed data for testing
+> ```$ cd /my/workspace/PokerLeagueAPI/db```
+
+> ```knex seed:run```
+
+Drop Tables
+> ```$ cd /my/workspace/PokerLeagueAPI/db```
+
+> ```knex migrate:rollback```
+
+
 ### Setup App
 
 Install [Node Package Manager (npm)](https://www.npmjs.com)
@@ -68,22 +89,3 @@ Be sure you have setup your local database and configured it within */db/knexfil
   * Repeat this setup for each platform by changing the "Name" and "Platform" variables.
 * In the "Run" drop-down list in the main toolbar, select your run option and click the green "Play" button to launch the app. 
   * Be sure the PokerLeagueAPI app is running and listening on whatever hostname:port is configured in */www/app/app.config.js*
-
-## Database
-The database tables/seed migration scripts rely on the Knex API. Install the Knex command line npm module
-before executing the following commands.
-```npm install -g knex```
-
-Run all database commands within this section from the <project workspace>/db folder in terminal.
-```cd <project workspace>```
-```cd db```
-
-### Generate tables
-```knex migrate:latest```
-
-### Load seed data for testing
-```knex seed:run```
-
-### Drop Tables
-```knex migrate:rollback```
-
