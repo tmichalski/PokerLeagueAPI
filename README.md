@@ -48,7 +48,7 @@ Drop Tables
 > ```knex migrate:rollback```
 
 
-### Setup App
+#### Setup App
 
 Install [Node Package Manager (npm)](https://www.npmjs.com)
 
@@ -68,17 +68,23 @@ Install [Nodemon](http://nodemon.io) for live reload
 ### Run App
 Be sure you have setup your local database and configured it within */db/knexfile.js*
 
-## App Config
-* Application config params are stored in */www/app/app.config.js*
-* serverHostName: Sets the web services hostname and port. Default is *http://pokerleague.lssinc.com:8080*
+Run using Nodemon live reload 
+> ```$ cd /my/workspace/PokerLeagueAPI```
+
+> ```$ nodemon server.js```
+
+Run using stock NodeJS
+> ```$ cd /my/workspace/PokerLeagueAPI```
+
+> ```$ node server.js```
+
 
 ### IDE: JetBrains WebStorm / IntelliJ IDEA
 * IntellJ IDE > Preferences > Plugins > Browse Repositories...  and install the following plugins:
-  * PhoneGap/Cordova
-  * AngularJS
+  * NodeJS
 * Run > Edit Configurations
   * Click the "+" sign to add a new configuration
-  * Choose "PhoneGap/Cordova" from the "+" drop-down list
+  * Choose "NodeJS" from the "+" drop-down list
   * Enter the following options
     * Name: Emulate Browser
     * PhoneGap/Cordova executable: /usr/local/bin/ionic
