@@ -1,6 +1,9 @@
 # PokerLeagueAPI
 Web services API for the PokerLeague mobile app.
 
+## PokerLeage Mobile App Project
+This project, PokerLeagueAPI, is the web services platform that drives the PokerLeague mobile app. Check out the Ionic/Cordova mobile app for this API at https://github.com/tmichalski/PokerLeague/.
+
 ## Coding Standards
 Following the coding standards for the following core frameworks of this app. 
 * [NodeJS](https://nodejs.org/en/) - Javscript Engine
@@ -30,7 +33,7 @@ Create a MySQL database and user called "pokerleague" to match the database conf
 The database tables/seed migration scripts rely on the Knex API. 
 
 Install the Knex command line npm module before executing the following commands.
-> ```npm install -g knex```
+> ```$ npm install -g knex```
 
 Generate tables
 > ```$ cd /my/workspace/PokerLeagueAPI/db```
@@ -40,12 +43,12 @@ Generate tables
 Load seed data for testing
 > ```$ cd /my/workspace/PokerLeagueAPI/db```
 
-> ```knex seed:run```
+> ```$ knex seed:run```
 
 Drop Tables
 > ```$ cd /my/workspace/PokerLeagueAPI/db```
 
-> ```knex migrate:rollback```
+> ```$ knex migrate:rollback```
 
 
 #### Setup App
@@ -82,16 +85,37 @@ Run using stock NodeJS
 ### IDE: JetBrains WebStorm / IntelliJ IDEA
 * IntellJ IDE > Preferences > Plugins > Browse Repositories...  and install the following plugins:
   * NodeJS
-* Run > Edit Configurations
+* Nodemon Run Configuration: 
+  * Run > Edit Configurations
   * Click the "+" sign to add a new configuration
   * Choose "NodeJS" from the "+" drop-down list
   * Enter the following options
-    * Name: Emulate Browser
-    * PhoneGap/Cordova executable: /usr/local/bin/ionic
-    * PhoneGap/Cordova working directory: <path to your project> (ie /Users/tim/Documents/workspace/PokerLeague)
-    * Command: emulate
-    * Platform: browser
+    * Name: Nodemon
+    * Node interpreter: /usr/local/bin/node (Project) <-- choose in drop-down, should be default
+    * Node parameters: /usr/loca/bin/nodemon
+    * Working directory: <path to your project> (ie /Users/tim/Documents/workspace/PokerLeagueAPI)
+    * JavaScript file: server.js
+    * Environment Variables:
+      * FACEBOOK_APP_ID: *get your own or ask @tmichalski*
+      * FACEBOOK_APP_SECRET: *get your own or ask @tmichalski*
   * Click "Ok" to save
-  * Repeat this setup for each platform by changing the "Name" and "Platform" variables.
-* In the "Run" drop-down list in the main toolbar, select your run option and click the green "Play" button to launch the app. 
+* Node Run Configuration: 
+  * Run > Edit Configurations
+  * Click the "+" sign to add a new configuration
+  * Choose "NodeJS" from the "+" drop-down list
+  * Enter the following options
+    * Name: Node
+    * Node interpreter: /usr/local/bin/node (Project) <-- choose in drop-down, should be default
+    * Working directory: <path to your project> (ie /Users/tim/Documents/workspace/PokerLeagueAPI)
+    * JavaScript file: server.js
+    * Environment Variables:
+      * FACEBOOK_APP_ID: *get your own or ask @tmichalski*
+      * FACEBOOK_APP_SECRET: *get your own or ask @tmichalski*
+  * Click "Ok" to save
+* PLAY/RUN:
+  * In the "Run" drop-down list in the main toolbar, select your run option and click the green "Play" button to launch the app. 
   * Be sure the PokerLeagueAPI app is running and listening on whatever hostname:port is configured in */www/app/app.config.js*
+* DEBUG:
+  * Click the bug icon instead of the green triangle play button to initiate debug
+  * Use "Node" run configuration for debug  
+  * Nodemon doesn't play nice with IntelliJ/WebStorm Debug mode
