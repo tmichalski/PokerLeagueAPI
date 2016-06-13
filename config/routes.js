@@ -25,6 +25,7 @@ const apiRoutes = function apiRoutes(app) {
 
     // League
     app.post('/league/join',        authFilter,         leagueController.join);
+    app.post('/league/leave',       authFilter,         leagueController.leave);
 
     // Seasons
     app.get('/seasons',             requestFilters,     seasonController.list);

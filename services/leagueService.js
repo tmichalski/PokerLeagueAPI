@@ -1,12 +1,14 @@
 'use strict';
 
+const Bookshelf = require('../db/bookshelf');
 const League = require('../models/league');
 const LeagueUser = require('../models/leagueUser');
 
 module.exports = {
     hasActiveLeague: hasActiveLeague,
     getActiveLeague: getActiveLeague,
-    joinLeague: joinLeague
+    joinLeague: joinLeague,
+    leaveLeague: leaveLeague
 };
 
 function getActiveLeague(user) {
@@ -36,24 +38,57 @@ function joinLeague(user, accessCode) {
     function addUserToLeague(league) {
         if (league) {
             console.log("joinLeague(): Found leagueId=" + league.id);
-            LeagueUser.forge({
+            return LeagueUser
+                .where({userId: user.id, leagueId: league.id})
+                .fetch()
+                .then(addOrUpdateLeagueUser);
+        } else {
+            console.log("joinLeague(): Could not find league for AccessCode=" + accessCode);
+            return false;
+        }
+    }
+
+    function addOrUpdateLeagueUser(leagueUser) {
+        if (leagueUser) {
+            leagueUser.set('isActive', true);
+            leagueUser.set('isDeleted', false);
+
+            return leagueUser.save()
+                .then( () => {return true} )
+                .catch(err => {
+                    console.out("Error updating LeagueUser", err);
+                    return false;
+                });
+
+        } else {
+            return LeagueUser.forge({
                 userId: user.id,
                 leagueId: league.id,
                 isActive: true,
                 isAdmin: false
             })
             .save()
-                .catch(err => {
-                  console.out("Error saving LeagueUser");
-                });
-            return true;
-
-        } else {
-            console.log("joinLeague(): Could not find league for AccessCode=" + accessCode);
-            return false;
+            .then( () => {return true})
+            .catch(err => {
+                console.out("Error saving LeagueUser", err);
+                return false
+            });
         }
     }
 }
+
+function leaveLeague(user) {
+    return Bookshelf.knex('leagueUser')
+        .where('userId', '=', user.id)
+        .update({isActive: false})
+        .then( () => {
+            return true;
+        })
+        .catch(err => {
+            console.log("Error updating LeagueUser records to being inactive.", err);
+        });
+}
+
 
 
 
