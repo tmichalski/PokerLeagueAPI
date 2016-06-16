@@ -2,20 +2,21 @@
 
 const leagueService = require('../services/leagueService');
 
-var controller = {
-
-    join: function(req, res) {
-        leagueService.joinLeague(req.user, req.body.accessCode).then(isSuccess => {
-            res.json({isSuccess: isSuccess});
-        })
-    },
-
-    leave: function(req, res) {
-        leagueService.leaveLeague(req.user).then(isSuccess => {
-           res.json({isSuccess: isSuccess});
-        });
-    }
-
+module.exports = {
+    join: join,
+    leave: leave
 };
 
-module.exports = controller;
+//////////////
+
+function join(req, res) {
+    leagueService.joinLeague(req.user, req.body.accessCode).then(isSuccess => {
+        res.json({isSuccess: isSuccess});
+    })
+}
+
+function leave(req, res) {
+    leagueService.leaveLeague(req.user).then(isSuccess => {
+        res.json({isSuccess: isSuccess});
+    });
+}

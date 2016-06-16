@@ -8,16 +8,17 @@ jwt.setSecret(jwtConfig.secret);
 
 const passport = require('../config/passport');
 
-var service = {
-
-    auth: function () {
-        return passport.authenticate('jwt', {session: false});
-    },
-
-    generateToken: function(user) {
-        return jwt.signAsync(user).then(token => 'JWT ' + token);
-    }
+module.exports = {
+    auth: auth,
+    generateToken: generateToken
 };
 
-module.exports = service;
+///////////////
 
+function auth() {
+    return passport.authenticate('jwt', {session: false});
+}
+
+function generateToken(user) {
+    return jwt.signAsync(user).then(token => 'JWT ' + token);
+}

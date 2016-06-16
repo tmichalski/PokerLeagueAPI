@@ -1,4 +1,5 @@
 'use strict';
+
 const facebookConfig = require('../config/facebook');
 const passportService = require('./passportService');
 const uuid = require('node-uuid');
@@ -10,6 +11,8 @@ const User = require('../models/user');
 module.exports = {
     login
 };
+
+///////////////
 
 function login(shortLivedToken) {
     return doesAppIdInTokenMatchOurAppId(shortLivedToken)

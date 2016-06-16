@@ -9,8 +9,8 @@ exports.up = function(knex, Promise) {
             table.string("email").notNullable();
             table.string("facebookId").nullable();
             table.string("facebookToken").nullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
         // LEAGUE
@@ -20,8 +20,8 @@ exports.up = function(knex, Promise) {
             table.string("accessCode").notNullable();
             table.boolean("isDeleted").defaultTo(false).notNullable();
             table.integer("createdByUserId").unsigned().notNullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
         // LEAGUE USER
@@ -32,8 +32,8 @@ exports.up = function(knex, Promise) {
             table.boolean("isAdmin").defaultTo(false).notNullable();
             table.boolean("isActive").defaultTo(true).notNullable();
             table.boolean("isDeleted").defaultTo(false).notNullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
         // SEASON
@@ -45,8 +45,8 @@ exports.up = function(knex, Promise) {
             table.boolean("isDeleted").defaultTo(false).notNullable();
             table.integer("firstPlaceUserId").unsigned().nullable().references("user.id");
             table.decimal("firstPlaceWinnings", 7, 2).nullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
         // EVENT
@@ -56,28 +56,35 @@ exports.up = function(knex, Promise) {
             table.integer("hostUserId").unsigned().notNullable().references("user.id");
             table.string("name").nullable();
             table.date("eventDate").notNullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
-        // EVENT RESULT
-        knex.schema.createTable("eventResult", function(table) {
+        // EVENT USER
+        knex.schema.createTable("eventUser", function(table) {
             table.increments("id").primary();
             table.integer("eventId").unsigned().notNullable().references("event.id");
             table.integer("userId").unsigned().notNullable().references("user.id");
-            table.decimal("amount", 7, 2).notNullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
-        // EVENT NOTE
-        knex.schema.createTable("eventNote", function(table) {
+        // EVENT ACTIVITY TYPE
+        knex.schema.createTable("eventActivityType", function(table) {
+            table.increments("id").primary();
+            table.string("name").notNullable();
+        }),
+
+        // EVENT ACTIVITY
+        knex.schema.createTable("eventActivity", function(table) {
             table.increments("id").primary();
             table.integer("eventId").unsigned().notNullable().references("event.id");
             table.integer("userId").unsigned().notNullable().references("user.id");
+            table.integer("eventActivityTypeId").unsigned().notNullable().references("eventActivityType.id");
             table.string("note", 300);
-            table.timestamp("createdDtm").defaultTo(knex.raw('NOW()')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('NOW()')).notNullable();
+            table.decimal("amount", 7, 2).nullable();
+            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
+            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         })
     ]);
 
@@ -85,8 +92,9 @@ exports.up = function(knex, Promise) {
 
 exports.down = function(knex, Promise) {
     return Promise.all([
-        knex.schema.dropTable("eventResult"),
-        knex.schema.dropTable("eventNote"),
+        knex.schema.dropTable("eventActivity"),
+        knex.schema.dropTable("eventActivityType"),
+        knex.schema.dropTable("eventUser"),
         knex.schema.dropTable("event"),
         knex.schema.dropTable("season"),
         knex.schema.dropTable("leagueUser"),

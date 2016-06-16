@@ -12,6 +12,8 @@ module.exports = {
     list: list
 };
 
+///////////////
+
 function getByUserId (id) {
     return User.forge({id: id})
         .fetch()

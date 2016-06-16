@@ -11,6 +11,8 @@ module.exports = {
     leaveLeague: leaveLeague
 };
 
+///////////////
+
 function getActiveLeague(user) {
     return LeagueUser.forge({userId: user.id, isActive: true, isDeleted: false})
         .catch(error => console.log("getActiveLeague(user): Error retrieving LeagueUser for user_id=" + user.id, error));
@@ -41,14 +43,16 @@ function joinLeague(user, accessCode) {
             return LeagueUser
                 .where({userId: user.id, leagueId: league.id})
                 .fetch()
-                .then(addOrUpdateLeagueUser);
+                .then(leagueUser => {
+                    addOrUpdateLeagueUser(league, leagueUser);
+                });
         } else {
             console.log("joinLeague(): Could not find league for AccessCode=" + accessCode);
             return false;
         }
     }
 
-    function addOrUpdateLeagueUser(leagueUser) {
+    function addOrUpdateLeagueUser(league, leagueUser) {
         if (leagueUser) {
             leagueUser.set('isActive', true);
             leagueUser.set('isDeleted', false);

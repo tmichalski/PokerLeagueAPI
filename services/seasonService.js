@@ -13,6 +13,8 @@ module.exports = {
     delete: deleteSeason
 };
 
+///////////////
+
 function getSeason(user, seasonId) {
     var params = {'id': seasonId};
     if ('latest' == seasonId) {

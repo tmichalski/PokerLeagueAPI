@@ -1,15 +1,16 @@
 'use strict';
 
-const express = require('express');
-const router = express.Router();
+const eventService = require('../services/eventService');
 
-const Event = require('../models/event');
+module.exports = {
+    get: getEvent
+};
 
-router.get('/schedule/:year', function(req, res) {
-    Event.fetchAll().then(function(events) {
-        res.json(eventss);
-    });
-});
+///////////////
 
-
-module.exports = router;
+function getEvent(req, res) {
+    eventService.getEvent(req.user, req.params.id)
+        .then(event => {
+            res.json(event);
+        });
+}

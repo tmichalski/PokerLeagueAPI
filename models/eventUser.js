@@ -2,10 +2,10 @@
 
 const bookshelf = require('../db/bookshelf');
 
-var eventResult = bookshelf.Model.extend({
-    tableName: 'eventResult',
+var eventUser = bookshelf.Model.extend({
+    tableName: 'eventUser',
 
-    visible: ['id', 'amount', 'event', 'user'],
+    visible: ['id', 'event', 'user'],
 
     event: function() {
         return this.belongsTo('Event', 'eventId');
@@ -16,4 +16,4 @@ var eventResult = bookshelf.Model.extend({
     }
 });
 
-module.exports = bookshelf.model('EventResult', eventResult);
+module.exports = bookshelf.model('EventUser', eventUser);

@@ -1,10 +1,11 @@
 const passportService = require('../services/passportService');
 const leagueService = require('../services/leagueService');
 
-const leagueController = require('../controllers/leagueController');
-const userController = require('../controllers/userController');
-const seasonController = require('../controllers/seasonController');
 const loginController = require('../controllers/loginController');
+const leagueController = require('../controllers/leagueController');
+const seasonController = require('../controllers/seasonController');
+const eventController = require('../controllers/eventController');
+const userController = require('../controllers/userController');
 
 const apiRoutes = function apiRoutes(app) {
     var authFilter = passportService.auth();
@@ -33,6 +34,9 @@ const apiRoutes = function apiRoutes(app) {
     app.get('/seasons/:id',         requestFilters,     seasonController.get);
     app.post('/seasons/:id',        requestFilters,     seasonController.update);
     app.delete('/seasons/:id',      requestFilters,     seasonController.delete);
+
+    // Events
+    app.get('/events/:id',          requestFilters,     eventController.get);
 
 };
 

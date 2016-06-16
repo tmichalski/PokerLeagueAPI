@@ -7,8 +7,9 @@
  **/
 
 require('./event');
-require('./eventNote');
-require('./eventResult');
+require('./eventActivity');
+require('./eventActivityType');
+require('./eventUser');
 
 require('./league');
 require('./leagueUser');
