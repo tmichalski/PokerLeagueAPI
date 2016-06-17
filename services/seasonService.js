@@ -4,6 +4,7 @@ const _ = require('lodash');
 const Bookshelf = require('../db/bookshelf');
 const Season = require('../models/season');
 const leagueService = require('../services/leagueService');
+const EventActivityTypes = require('../models/eventActivityTypeValues');
 
 module.exports = {
     get: getSeason,
@@ -39,13 +40,14 @@ function getSeason(user, seasonId) {
         .then(_packageResults);
 
     function _queryForRankings(season) {
-        return Bookshelf.knex.select('user.*').sum('eventResult.amount as winnings')
-            .from('eventResult')
-            .innerJoin('user', 'eventResult.userId', 'user.id')
-            .innerJoin('event', 'eventResult.eventId', 'event.id')
+        return Bookshelf.knex.select('user.*').sum('eventActivity.amount as winnings')
+            .from('eventActivity')
+            .innerJoin('user', 'eventActivity.userId', 'user.id')
+            .innerJoin('event', 'eventActivity.eventId', 'event.id')
             .innerJoin('season', 'event.seasonId', 'season.id')
             .where('season.id', season.get('id'))
-            .groupBy('eventResult.userId')
+            .andWhere('eventActivity.eventActivityTypeId', EventActivityTypes.FINAL_RESULT)
+            .groupBy('eventActivity.userId')
             .orderBy('winnings', 'desc')
             .then(rankings => {
                 return [season, rankings]

@@ -44,7 +44,7 @@ function joinLeague(user, accessCode) {
                 .where({userId: user.id, leagueId: league.id})
                 .fetch()
                 .then(leagueUser => {
-                    addOrUpdateLeagueUser(league, leagueUser);
+                    return addOrUpdateLeagueUser(league, leagueUser);
                 });
         } else {
             console.log("joinLeague(): Could not find league for AccessCode=" + accessCode);
@@ -58,7 +58,9 @@ function joinLeague(user, accessCode) {
             leagueUser.set('isDeleted', false);
 
             return leagueUser.save()
-                .then( () => {return true} )
+                .then(function() {
+                    return true
+                })
                 .catch(err => {
                     console.out("Error updating LeagueUser", err);
                     return false;

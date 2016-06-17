@@ -12,9 +12,6 @@ function getEvent(user, eventId) {
     var params = {'id': eventId};
 
     return Event.forge(params).query(function (q) {
-            // Inner join on Season
-            // Inner join on League
-            // Inner join on LeagueUser
             q.innerJoin('season', function() {
                 this.on('event.seasonId', '=', 'season.id')
             })

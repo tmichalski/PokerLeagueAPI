@@ -9,6 +9,7 @@
 require('./event');
 require('./eventActivity');
 require('./eventActivityType');
+require('./eventActivityTypeValues');
 require('./eventUser');
 
 require('./league');
