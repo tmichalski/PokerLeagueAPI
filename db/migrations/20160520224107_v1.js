@@ -83,6 +83,7 @@ exports.up = function(knex, Promise) {
             table.integer("eventActivityTypeId").unsigned().notNullable().references("eventActivityType.id");
             table.string("note", 300);
             table.decimal("amount", 7, 2).nullable();
+            table.integer("createdByUserId").unsigned().notNullable().references("user.id");
             table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
             table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         })
