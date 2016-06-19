@@ -1,6 +1,6 @@
 'use strict';
 
-const Promise = require('Bluebird');
+const Promise = require('bluebird');
 const User = require('../models/user');
 const LeagueUser = require('../models/leagueUser');
 const uuid = require('node-uuid');
