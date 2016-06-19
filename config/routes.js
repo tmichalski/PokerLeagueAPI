@@ -36,9 +36,11 @@ const apiRoutes = function apiRoutes(app) {
     app.delete('/seasons/:id',      requestFilters,     seasonController.delete);
 
     // Events
-    app.get('/events/:id',          requestFilters,     eventController.get);
-    app.get('/events/:id/users',    requestFilters,     eventController.users);
-    app.get('/events/:id/activities',    requestFilters,     eventController.activities);
+    app.get('/events/:id',              requestFilters,     eventController.get);
+    app.get('/events/:id/users',        requestFilters,     eventController.users);
+    app.get('/events/:id/activities',   requestFilters,     eventController.activities);
+    app.post('/events/:id/activities',  requestFilters,     eventController.save);
+    app.delete('/events/:id/activities/:activityId', requestFilters, eventController.delete);
 
 };
 

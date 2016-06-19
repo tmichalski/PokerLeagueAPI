@@ -2,12 +2,17 @@
 
 const Event = require('../models/event');
 const EventActivity = require('../models/eventActivity');
+const EventActivityType = require('../models/eventActivityType');
+const EventActivityTypeValues = require('../models/eventActivityTypeValues');
 const Bookshelf = require('../db/bookshelf');
+const Promise = require('bluebird');
 
 module.exports = {
     getEvent: getEvent,
     getEventUsers: getEventUsers,
-    getEventActivities: getEventActivities
+    getEventActivities: getEventActivities,
+    saveEventActivity: saveEventActivity,
+    deleteEventActivity: deleteEventActivity
 };
 
 ///////////////
@@ -89,4 +94,97 @@ function getEventActivities(user, eventId) {
         .orderBy('createdDtm', 'desc')
     })
     .fetchAll({withRelated: ['user', 'eventActivityType', 'createdByUser']});
+}
+
+function saveEventActivity(user, eventId, activityIn) {
+    var tasks = [
+        getEvent(user, eventId),
+        _validateType(activityIn.type),
+        _validateUser(activityIn.userId),
+        _getActivity(eventId, activityIn.activityId)
+    ];
+
+    return Promise.all(tasks).then(values => {
+        var [event, type, activityUser, eventActivity] = values;
+        return _save(event, type, activityUser, eventActivity);
+    });
+
+    function _validateType(typeId) {
+       return EventActivityType.where({id: typeId}).fetch();
+    }
+
+    function _validateUser(userId) {
+        return userId ? getEvent({id: userId}, eventId) : null
+    }
+
+    function _getActivity(eventId, activityId) {
+        return EventActivity.where({id: activityId, eventId: eventId}).fetch();
+    }
+
+    function _save(event, type, activityUser, eventActivity) {
+        if (!event || !type) {
+            console.log("saveEventActivity: Event or activity type not found. Aborting.");
+            return {error: "Invalid event and/or event type provided."}
+        }
+
+        if (EventActivityTypeValues.NOTE == type.id) {
+            activityUser = user;
+        }
+
+        if (!activityUser) {
+            console.log("saveEventActivity: Invalid user. Aborting.");
+            return {error: "Invalid event user provided."}
+        }
+
+
+        if (eventActivity) {
+            return eventActivity.save({
+                eventActivityTypeId: type.id,
+                note: activityIn.note,
+                amount: activityIn.amount,
+                userId: activityUser.id,
+                createdByUserId: user.id
+            })    
+        } else {
+            return new EventActivity({
+                eventId: event.id,
+                eventActivityTypeId: type.id,
+                note: activityIn.note,
+                amount: activityIn.amount,
+                userId: activityUser.id,
+                createdByUserId: user.id
+            }).save();
+        }
+    }
+}
+
+function deleteEventActivity(user, eventId, eventActivityId) {
+    var tasks = [
+        getEvent(user, eventId),
+        _getActivity(eventActivityId)
+    ];
+
+    return Promise.all(tasks).then(values => {
+        var [event, eventActivity] = values;
+        return _delete(event, eventActivity);
+    });
+
+    function _getActivity(activityId) {
+        return EventActivity.where({id: activityId, eventId: eventId}).fetch();
+    }
+
+    function _delete(event, eventActivity) {
+        if (!event || !eventActivity) {
+            console.log("deleteEventActivity: Event or activity not found. Aborting.");
+            return {isSuccess: false, error: "Invalid event and/or activity provided."}
+        }
+
+        eventActivity.save({
+            isDeleted: true
+        }).then(eventActivity => {
+            return {isSuccess: true}
+        }).catch(function(error) {
+            return {isSuccess: false, error: error}
+        });
+    }
 }
