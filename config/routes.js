@@ -25,8 +25,10 @@ const apiRoutes = function apiRoutes(app) {
     app.get('/users/:id',           requestFilters,     userController.get);
 
     // League
+    app.get('/league',             authFilter,         leagueController.getLeague);
     app.post('/league/join',        authFilter,         leagueController.join);
     app.post('/league/leave',       authFilter,         leagueController.leave);
+    app.post('/league/create',      authFilter,         leagueController.create);
 
     // Seasons
     app.get('/seasons',             requestFilters,     seasonController.list);

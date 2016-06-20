@@ -4,7 +4,9 @@ const leagueService = require('../services/leagueService');
 
 module.exports = {
     join: join,
-    leave: leave
+    leave: leave,
+    create: create,
+    getLeague: getLeague
 };
 
 //////////////
@@ -18,5 +20,17 @@ function join(req, res) {
 function leave(req, res) {
     leagueService.leaveLeague(req.user).then(isSuccess => {
         res.json({isSuccess: isSuccess});
+    });
+}
+
+function create(req, res) {
+    leagueService.createLeague(req.user, req.body.name, req.body.seasonYear).then(response => {
+        res.json(response);
+    });
+}
+
+function getLeague(req, res) {
+    leagueService.getActiveLeague(req.user).then(leagueUser => {
+        res.json(leagueUser);
     });
 }

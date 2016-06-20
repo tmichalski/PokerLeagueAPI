@@ -3,18 +3,21 @@
 const Bookshelf = require('../db/bookshelf');
 const League = require('../models/league');
 const LeagueUser = require('../models/leagueUser');
+const Season = require('../models/season');
 
 module.exports = {
     hasActiveLeague: hasActiveLeague,
     getActiveLeague: getActiveLeague,
     joinLeague: joinLeague,
-    leaveLeague: leaveLeague
+    leaveLeague: leaveLeague,
+    createLeague: createLeague
 };
 
 ///////////////
 
 function getActiveLeague(user) {
-    return LeagueUser.forge({userId: user.id, isActive: true, isDeleted: false})
+    return LeagueUser.where({userId: user.id, isActive: true, isDeleted: false})
+        .fetch({withRelated: ['league']})
         .catch(error => console.log("getActiveLeague(user): Error retrieving LeagueUser for user_id=" + user.id, error));
 }
 
@@ -95,7 +98,28 @@ function leaveLeague(user) {
         });
 }
 
+function createLeague(user, name, seasonYear) {
+    return _createLeague()
+        .then(_createSeason)
+        .then(_createLeagueUser)
+        .then( () => {
+            return {isSuccess: true}
+        });
 
+    function _createLeague() {
+        var accessCode = generateAccessCode();
+        return League.forge({name: name, accessCode: accessCode, createdByUserId: user.id}).save();
+    }
 
+    function _createSeason(league) {
+        return Season.forge({leagueId: league.id, year: seasonYear}).save();
+    }
 
+    function _createLeagueUser(season) {
+        return LeagueUser.forge({leagueId: season.get('leagueId'), userId: user.id, isAdmin: true}).save();
+    }
+}
 
+function generateAccessCode() {
+    return Math.floor(Math.random() * 100000); // should yield a number between 4-5 digits
+}

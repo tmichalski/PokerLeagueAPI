@@ -41,7 +41,7 @@ exports.up = function(knex, Promise) {
             table.increments("id").primary();
             table.integer("leagueId").unsigned().notNullable().references("league.id");
             table.integer("year").notNullable();
-            table.boolean("isActive").notNullable();
+            table.boolean("isActive").defaultTo(true).notNullable();
             table.boolean("isDeleted").defaultTo(false).notNullable();
             table.integer("firstPlaceUserId").unsigned().nullable().references("user.id");
             table.decimal("firstPlaceWinnings", 7, 2).nullable();
