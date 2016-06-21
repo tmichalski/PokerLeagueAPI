@@ -1,5 +1,6 @@
 'use strict';
 
+const moment = require('moment');
 const bookshelf = require('../db/bookshelf');
 
 var event = bookshelf.Model.extend({
@@ -21,6 +22,12 @@ var event = bookshelf.Model.extend({
 
     eventUsers: function() {
         return this.hasMany('EventUser', 'eventId')
+    },
+
+    toJSON: function () {
+        var attrs = bookshelf.Model.prototype.toJSON.apply(this, arguments);
+        attrs.eventDate = moment(this.get('eventDate')).format('YYYY-MM-DDTHH:mm');
+        return attrs;
     }
 });
 

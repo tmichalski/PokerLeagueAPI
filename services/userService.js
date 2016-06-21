@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const Promise = require('bluebird');
 const User = require('../models/user');
 const LeagueUser = require('../models/leagueUser');
@@ -57,6 +58,37 @@ function listLeagues(userId) {
     return LeagueUser.where({userId: userId, isActive: true, isDeleted: false}).fetchAll();
 }
 
-function list() {
-    return User.fetchAll();
+function list(user) {
+    return _fetchActiveLeagueUser(user.id)
+        .then(_fetchLeagueUsers);
+
+    function _fetchActiveLeagueUser(userId) {
+        return LeagueUser.where({userId: userId, isActive: true, isDeleted: false})
+            .fetch();
+    }
+
+    function _fetchLeagueUsers(leagueUser)  {
+        return LeagueUser.where({leagueId: leagueUser.get('leagueId'), isActive: true, isDeleted: false})
+            .fetchAll({withRelated: ['user']})
+            .then(marshallLeagueUserListAsUsers);
+    }
+}
+
+function marshallLeagueUserListAsUsers(leagueUsers) {
+    var users = [];
+    if (leagueUsers) {
+        leagueUsers.each(leagueUser => {
+            users.push(marshallLeagueUserAsUser(leagueUser))
+        })
+    }
+    return users;
+}
+
+function marshallLeagueUserAsUser(leagueUser) {
+    if (leagueUser) {
+        var user = leagueUser.related('user');
+        user.set('isLeagueAdmin', leagueUser.get('isAdmin'));
+        return user;
+    }
+    return null;
 }

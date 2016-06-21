@@ -55,7 +55,7 @@ exports.up = function(knex, Promise) {
             table.integer("seasonId").unsigned().notNullable().references("season.id");
             table.integer("hostUserId").unsigned().notNullable().references("user.id");
             table.string("name").nullable();
-            table.date("eventDate").notNullable();
+            table.datetime("eventDate").notNullable();
             table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
             table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
