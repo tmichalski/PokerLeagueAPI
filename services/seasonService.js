@@ -11,7 +11,8 @@ module.exports = {
     list: listSeasons,
     add: addSeason,
     update: updateSeason,
-    delete: deleteSeason
+    delete: deleteSeason,
+    getSeasonForActiveLeagueUser: getSeasonForActiveLeagueUser
 };
 
 ///////////////

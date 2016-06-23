@@ -25,7 +25,7 @@ const apiRoutes = function apiRoutes(app) {
     app.get('/users/:id',           requestFilters,     userController.get);
 
     // League
-    app.get('/league',             authFilter,         leagueController.getLeague);
+    app.get('/league',              authFilter,         leagueController.getLeague);
     app.post('/league/join',        authFilter,         leagueController.join);
     app.post('/league/leave',       authFilter,         leagueController.leave);
     app.post('/league/create',      authFilter,         leagueController.create);
@@ -39,10 +39,11 @@ const apiRoutes = function apiRoutes(app) {
 
     // Events
     app.get('/events/:id',              requestFilters,     eventController.get);
+    app.post('/events/:id',             requestFilters,     eventController.save);
     app.get('/events/:id/users',        requestFilters,     eventController.users);
     app.get('/events/:id/activities',   requestFilters,     eventController.activities);
-    app.post('/events/:id/activities',  requestFilters,     eventController.save);
-    app.delete('/events/:id/activities/:activityId', requestFilters, eventController.delete);
+    app.post('/events/:id/activities',  requestFilters,     eventController.saveActivity);
+    app.delete('/events/:id/activities/:activityId', requestFilters, eventController.deleteActivity);
 
 };
 

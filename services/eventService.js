@@ -6,13 +6,16 @@ const EventActivityType = require('../models/eventActivityType');
 const EventActivityTypeValues = require('../models/eventActivityTypeValues');
 const Bookshelf = require('../db/bookshelf');
 const Promise = require('bluebird');
+const moment = require('moment');
+const seasonService = require('./seasonService');
 
 module.exports = {
     getEvent: getEvent,
     getEventUsers: getEventUsers,
     getEventActivities: getEventActivities,
     saveEventActivity: saveEventActivity,
-    deleteEventActivity: deleteEventActivity
+    deleteEventActivity: deleteEventActivity,
+    saveEvent: saveEvent
 };
 
 ///////////////
@@ -188,3 +191,46 @@ function deleteEventActivity(user, eventId, eventActivityId) {
         });
     }
 }
+
+function saveEvent(user, eventIn) {
+    var tasks = [
+        getEvent(user, eventIn.id),
+        _validateUser(eventIn.seasonId, eventIn.hostUserId),
+        _validateUser(eventIn.seasonId, user.id)
+    ];
+
+    return Promise.all(tasks).then(values => {
+        var [event, hostUserSeason, appUserSeason] = values;
+        return _save(event, hostUserSeason, appUserSeason);
+    });
+
+    function _validateUser(seasonId, userId) {
+        return seasonService.getSeasonForActiveLeagueUser(seasonId, userId);
+    }
+
+    function _save(event, hostUserSeason, appUserSeason) {
+        if (!appUserSeason) {
+            return {error: "Invalid season provided."}
+        }
+
+        if (!hostUserSeason) {
+            return {error: "Invalid event host user provided."}
+        }
+
+        if (event) {
+            return event.save({
+                name: eventIn.name,
+                hostUserId: eventIn.hostUserId,
+                eventDate: moment(eventIn.eventDate).toDate()
+            })
+        } else {
+            return new Event({
+                seasonId: eventIn.seasonId,
+                name: eventIn.name,
+                eventDate: moment(eventIn.eventDate).toDate(),
+                hostUserId: eventIn.hostUserId
+            }).save();
+        }
+    }
+}
+
