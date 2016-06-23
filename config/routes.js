@@ -39,6 +39,7 @@ const apiRoutes = function apiRoutes(app) {
 
     // Events
     app.get('/events/:id',              requestFilters,     eventController.get);
+    app.post('/events',                 requestFilters,     eventController.save);
     app.post('/events/:id',             requestFilters,     eventController.save);
     app.get('/events/:id/users',        requestFilters,     eventController.users);
     app.get('/events/:id/activities',   requestFilters,     eventController.activities);
