@@ -5,7 +5,7 @@ const bookshelf = require('../db/bookshelf');
 var league = bookshelf.Model.extend({
     tableName: 'league',
 
-    visible: ['id', 'name', 'accessCode', 'season', 'leagueUsers'],
+    visible: ['id', 'name', 'season', 'leagueUsers'],
 
     parse : function (response) {
         response.isActive = !!response.isActive;
@@ -16,8 +16,8 @@ var league = bookshelf.Model.extend({
         return this.hasMany('Season', 'seasonId')
     },
 
-    leagueUsers: function() {
-        return this.hasMany('LeagueUser', 'leagueId')
+    leagueMembers: function() {
+        return this.hasMany('LeagueMember', 'leagueId')
     }
 });
 

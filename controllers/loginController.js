@@ -1,7 +1,7 @@
 'use strict';
 
 const Promise = require('bluebird');
-const userService = require('../services/userService');
+const leagueService = require('../services/leagueService');
 const passportService = require('../services/passportService');
 const facebookService = require('../services/facebookService');
 
@@ -17,7 +17,7 @@ function login(req, res) {
 
             var tasks = [
                 passportService.generateToken(user),
-                userService.listLeagues(user.id)
+                leagueService.listLeagues(user)
             ];
 
             Promise.all(tasks).then(values => {

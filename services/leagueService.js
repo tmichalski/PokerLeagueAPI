@@ -2,31 +2,34 @@
 
 const Bookshelf = require('../db/bookshelf');
 const League = require('../models/league');
-const LeagueUser = require('../models/leagueUser');
+const LeagueMember = require('../models/leagueMember');
 const Season = require('../models/season');
+const User = require('../models/user');
 
 module.exports = {
     hasActiveLeague: hasActiveLeague,
-    getActiveLeague: getActiveLeague,
+    getActiveLeagueMember: getActiveLeagueMember,
     joinLeague: joinLeague,
     leaveLeague: leaveLeague,
-    createLeague: createLeague
+    createLeague: createLeague,
+    listLeagues: listLeagues
 };
 
 ///////////////
 
-function getActiveLeague(user) {
-    return LeagueUser.where({userId: user.id, isActive: true, isDeleted: false})
+function getActiveLeagueMember(user) {
+    return LeagueMember.where({userId: user.id, isActive: true, isDeleted: false})
         .fetch({withRelated: ['league']})
-        .catch(error => console.log("getActiveLeague(user): Error retrieving LeagueUser for user_id=" + user.id, error));
+        .orderBy('leagueId')
+        .catch(error => console.log("getActiveLeagueMember(user): Error retrieving LeagueMember for user_id=" + user.id, error));
 }
 
 function hasActiveLeague(req, res, next) {
-    return LeagueUser.forge({userId: req.user.id, isActive: true, isDeleted: false})
+    return LeagueMember.forge({userId: req.user.id, isActive: true, isDeleted: false})
         .orderBy('id', 'DESC')
         .fetch()
-        .then(function (leagueUser) {
-            if (leagueUser) {
+        .then(function (leagueMember) {
+            if (leagueMember) {
                 next();
             } else {
                 res.status(412).json({error: 'User is not involved in an active league.'});
@@ -35,91 +38,94 @@ function hasActiveLeague(req, res, next) {
 }
 
 function joinLeague(user, accessCode) {
-    return League
+    return LeagueMember
         .where({accessCode: accessCode})
         .fetch()
         .then(addUserToLeague);
 
-    function addUserToLeague(league) {
-        if (league) {
-            console.log("joinLeague(): Found leagueId=" + league.id);
-            return LeagueUser
-                .where({userId: user.id, leagueId: league.id})
-                .fetch()
-                .then(leagueUser => {
-                    return addOrUpdateLeagueUser(league, leagueUser);
+    function addUserToLeague(leagueMember) {
+        if (leagueMember) {
+            console.log("joinLeague(): Found leagueMemberId=" + leagueMember.id);
+
+            leagueMember.set('userId', user.id);
+            leagueMember.set('isActive', true);
+            leagueMember.set('isDeleted', false);
+
+            return leagueMember.save()
+                .then( () => {
+                    return true;
+                })
+                .catch(err => {
+                    console.out("Error updating LeagueMember", err);
+                    return false;
                 });
         } else {
             console.log("joinLeague(): Could not find league for AccessCode=" + accessCode);
             return false;
         }
     }
-
-    function addOrUpdateLeagueUser(league, leagueUser) {
-        if (leagueUser) {
-            leagueUser.set('isActive', true);
-            leagueUser.set('isDeleted', false);
-
-            return leagueUser.save()
-                .then(function() {
-                    return true
-                })
-                .catch(err => {
-                    console.out("Error updating LeagueUser", err);
-                    return false;
-                });
-
-        } else {
-            return LeagueUser.forge({
-                userId: user.id,
-                leagueId: league.id,
-                isActive: true,
-                isAdmin: false
-            })
-            .save()
-            .then( () => {return true})
-            .catch(err => {
-                console.out("Error saving LeagueUser", err);
-                return false
-            });
-        }
-    }
 }
 
 function leaveLeague(user) {
-    return Bookshelf.knex('leagueUser')
+    return Bookshelf.knex('leagueMember')
         .where('userId', '=', user.id)
         .update({isActive: false})
         .then( () => {
             return true;
         })
         .catch(err => {
-            console.log("Error updating LeagueUser records to being inactive.", err);
+            console.log("Error updating LeagueMember records to being inactive.", err);
         });
 }
 
 function createLeague(user, name, seasonYear) {
     return _createLeague()
         .then(_createSeason)
-        .then(_createLeagueUser)
+        .then(_generateUserAccessCode)
+        .then(_createLeagueMember)
         .then( () => {
             return {isSuccess: true}
         });
 
     function _createLeague() {
-        var accessCode = generateAccessCode();
-        return League.forge({name: name, accessCode: accessCode, createdByUserId: user.id}).save();
+        return League.forge({name: name, createdByUserId: user.id}).save();
     }
 
     function _createSeason(league) {
         return Season.forge({leagueId: league.id, year: seasonYear}).save();
     }
 
-    function _createLeagueUser(season) {
-        return LeagueUser.forge({leagueId: season.get('leagueId'), userId: user.id, isAdmin: true}).save();
+    function _generateUserAccessCode(season) {
+        return generateUserAccessCode(user)
+            .then(accessCode => {
+                return [season, accessCode];
+            });
+    }
+
+    function _createLeagueMember(leagueMemberData) {
+        var [season, userAccessCode] = leagueMemberData;
+        return LeagueMember.forge({
+            leagueId: season.get('leagueId'),
+            userId: user.id,
+            accessCode: userAccessCode,
+            isAdmin: true
+        }).save();
     }
 }
 
-function generateAccessCode() {
-    return Math.floor(Math.random() * 100000); // should yield a number between 4-5 digits
+function listLeagues(user) {
+    return LeagueMember.where({userId: user.id}).fetchAll();
+}
+
+function generateUserAccessCode() {
+    var accessCode = Math.floor(Math.random() * 100000); // should yield a number between 4-5 digits
+    return LeagueMember.where({accessCode: accessCode})
+        .fetch()
+        .then(user => {
+            if (user) {
+                return generateUserAccessCode(user);
+            } else {
+                return accessCode;
+            }
+        });
 }

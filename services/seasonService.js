@@ -12,7 +12,7 @@ module.exports = {
     add: addSeason,
     update: updateSeason,
     delete: deleteSeason,
-    getSeasonForActiveLeagueUser: getSeasonForActiveLeagueUser
+    getSeasonForActiveLeagueMember: getSeasonForActiveLeagueMember
 };
 
 ///////////////
@@ -27,28 +27,32 @@ function getSeason(user, seasonId) {
             q.innerJoin('league', function () {
                 this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('leagueUser', function () {
-                this.on('league.id', '=', 'leagueUser.leagueId')
-                    .andOn('leagueUser.userId', '=', user.id)
+            .innerJoin('leagueMember', function () {
+                this.on('league.id', '=', 'leagueMember.leagueId')
+                    .andOn('leagueMember.userId', '=', user.id)
             })
             .where('season.isDeleted', false)
             .andWhere('league.isDeleted', false)
-            .andWhere('leagueUser.isDeleted', false)
-            .andWhere('leagueUser.isActive', true)
+            .andWhere('leagueMember.isDeleted', false)
+            .andWhere('leagueMember.isActive', true)
         })
         .fetch({withRelated: ['firstPlaceUser', 'events.hostUser', 'league']})
         .then(_queryForRankings)
         .then(_packageResults);
 
     function _queryForRankings(season) {
-        return Bookshelf.knex.select('user.*').sum('eventActivity.amount as winnings')
-            .from('eventActivity')
-            .innerJoin('user', 'eventActivity.userId', 'user.id')
-            .innerJoin('event', 'eventActivity.eventId', 'event.id')
-            .innerJoin('season', 'event.seasonId', 'season.id')
+        return Bookshelf.knex
+            .select('leagueMember.id', 'leagueMember.name')
+            .sum('eventActivity.amount as winnings')
+            .from('leagueMember')
+            .innerJoin('league', 'leagueMember.leagueId', 'league.id')
+            .innerJoin('season', 'league.id', 'season.leagueId')
+            .innerJoin('event', 'season.id', 'event.seasonId')
+            .leftJoin('eventActivity', 'event.id', 'eventActivity.eventId')
             .where('season.id', season.get('id'))
             .andWhere('eventActivity.eventActivityTypeId', EventActivityTypes.FINAL_RESULT)
-            .groupBy('eventActivity.userId')
+            .andWhere('leagueMember.isActive', true)
+            .groupBy('leagueMember.id')
             .orderBy('winnings', 'desc')
             .then(rankings => {
                 return [season, rankings]
@@ -68,24 +72,24 @@ function listSeasons(user) {
             q.innerJoin('league', function () {
                 this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('leagueUser', function () {
-                this.on('league.id', '=', 'leagueUser.leagueId')
-                    .andOn('leagueUser.userId', '=', user.id)
+            .innerJoin('leagueMember', function () {
+                this.on('league.id', '=', 'leagueMember.leagueId')
+                    .andOn('leagueMember.userId', '=', user.id)
             })
             .where('season.isDeleted', false)
             .andWhere('league.isDeleted', false)
-            .andWhere('leagueUser.isDeleted', false)
-            .andWhere('leagueUser.isActive', true)
+            .andWhere('leagueMember.isDeleted', false)
+            .andWhere('leagueMember.isActive', true)
         })
         .orderBy('year', 'DESC')
         .fetchAll({withRelated: ['firstPlaceUser']});
 }
 
 function addSeason(user, year, isActive) {
-    return leagueService.getActiveLeague(user)
-        .then(leagueUser => {
-            if (leagueUser) {
-                return _save(leagueUser.leagueId, year, isActive);
+    return leagueService.getActiveLeagueMember(user)
+        .then(leagueMember => {
+            if (leagueMember) {
+                return _save(leagueMember.leagueId, year, isActive);
             } else {
                 return null;
             }
@@ -103,7 +107,7 @@ function addSeason(user, year, isActive) {
 
 function updateSeason(user, seasonId, year, isActive) {
     // TODO This could be combined into a single UPDATE statement that would both verify the season belonging to the user and update.
-    return getSeasonForActiveLeagueUser(seasonId, user.id)
+    return getSeasonForActiveLeagueMember(seasonId, user.id)
         .then(season => {
             if (season) {
                 return _save(seasonId, year, isActive);
@@ -135,7 +139,7 @@ function updateSeason(user, seasonId, year, isActive) {
 
 function deleteSeason(user, seasonId) {
     // TODO This could be combined into a single UPDATE statement that would both verify the season belonging to the user and update.
-    return getSeasonForActiveLeagueUser(seasonId, user.id)
+    return getSeasonForActiveLeagueMember(seasonId, user.id)
         .then(season => {
             if (season) {
                 return Delete(seasonId);
@@ -165,19 +169,19 @@ function deleteSeason(user, seasonId) {
     }
 }
 
-function getSeasonForActiveLeagueUser(seasonId, userId) {
+function getSeasonForActiveLeagueMember(seasonId, userId) {
     return Season.forge({id: seasonId}).query(function (q) {
             q.innerJoin('league', function () {
                 this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('leagueUser', function () {
-                this.on('league.id', '=', 'leagueUser.leagueId')
-                    .andOn('leagueUser.userId', '=', userId)
+            .innerJoin('leagueMember', function () {
+                this.on('league.id', '=', 'leagueMember.leagueId')
+                    .andOn('leagueMember.userId', '=', userId)
             })
             .where('season.isDeleted', false)
             .andWhere('league.isDeleted', false)
-            .andWhere('leagueUser.isDeleted', false)
-            .andWhere('leagueUser.isActive', true)
+            .andWhere('leagueMember.isDeleted', false)
+            .andWhere('leagueMember.isActive', true)
     })
     .fetch();
 }

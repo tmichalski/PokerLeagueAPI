@@ -1,21 +1,24 @@
 'use strict';
 
 const _ = require('lodash');
+const Bookshelf = require('../db/bookshelf');
 const Promise = require('bluebird');
 const User = require('../models/user');
-const LeagueUser = require('../models/leagueUser');
+const LeagueMember = require('../models/leagueMember');
 const uuid = require('node-uuid');
+const EventActivityTypes = require('../models/eventActivityTypeValues');
+
+const leagueService = require('../services/leagueService');
 
 module.exports = {
     getByUserId: getByUserId,
     getByCurrentUserAndUserId: getByCurrentUserAndUserId,
-    listLeagues: listLeagues,
     list: list
 };
 
 ///////////////
 
-function getByUserId (id) {
+function getByUserId(id) {
     return User.forge({id: id})
         .fetch()
         .catch(function (error) {
@@ -30,64 +33,99 @@ function getByCurrentUserAndUserId(currentUser, userId) {
         return Promise.resolve(currentUser);
     }
 
-    return User.forge({id: userId}).query(function (q) {
-        q.innerJoin('leagueUser', function () {
-            this.on('user.id', '=', 'leagueUser.userId')
-        })
-        .innerJoin('league', function () {
-            this.on('leagueUser.id', '=', 'league.id')
-        })
-        .whereIn('league.id', function () {
-            this.select('league.id')
-                .from('league')
-                .innerJoin('leagueUser', function () {
-                    this.on('league.id', '=', 'leagueUser.leagueId')
-                        .andOn(currentUser.id, '=', 'leagueUser.userId')
-                })
-                .where('league.isDeleted', false)
-                .andWhere('leagueUser.isActive', true)
-                .andWhere('leagueUser.isDeleted', false)
-        })
-        .andWhere('league.isDeleted', false)
-        .andWhere('leagueUser.isActive', true)
-        .andWhere('leagueUser.isDeleted', false)
-    }).fetch();
-}
+    return leagueService.getActiveLeagueMember(currentUser) 
+        .then(_getUser)
+        .then(_getSeasons)
+        .then(_packageResults);
 
-function listLeagues(userId) {
-    return LeagueUser.where({userId: userId, isActive: true, isDeleted: false}).fetchAll();
+    function _getUser(league) {
+        return User.forge({id: userId}).query(function (q) {
+            q.innerJoin('leagueMember', function () {
+                this.on('user.id', '=', 'leagueMember.userId')
+            })
+            .innerJoin('league', function () {
+                this.on('leagueMember.leagueId', '=', 'league.id')
+            })
+            .where('league.id', league.get('id'))
+            .andWhere('league.isDeleted', false)
+            .andWhere('leagueMember.isActive', true)
+            .andWhere('leagueMember.isDeleted', false)
+        })
+        .fetch()
+        .then(user => {
+            return [league, user]
+        });
+    }
+
+    function _getSeasons(leagueAndUser) {
+        var [league, user] = leagueAndUser;
+
+        return Bookshelf.knex.select('season.*').sum('eventActivity.amount as winnings')
+            .from('eventActivity')
+            .innerJoin('user', 'eventActivity.userId', 'user.id')
+            .innerJoin('event', 'eventActivity.eventId', 'event.id')
+            .innerJoin('season', 'event.seasonId', 'season.id')
+            .where('season.leagueId', league.get('id'))
+            .andWhere('user.id', user.get('id'))
+            .andWhere('eventActivity.eventActivityTypeId', EventActivityTypes.FINAL_RESULT)
+            .groupBy('season.id')
+            .orderBy('season.year', 'desc')
+            .then(rankings => {
+                return [user, rankings]
+            });
+    }
+
+    function _packageResults(userAndSeasonsArray) {
+        var [userRow, seasonsRows] = userAndSeasonsArray;
+        var user = userRow.serialize();
+        user.seasons = _marshallSeasons(seasonsRows);
+        return user;
+    }
+
+    function _marshallSeasons(seasons) {
+        if (seasons == undefined) return;
+        var out = [];
+        _(seasons).each(function (season) {
+            out.push({
+                id: season.id,
+                year: season.year,
+                winnings: season.winnings
+            });
+        });
+        return out;
+    }
 }
 
 function list(user) {
-    return _fetchActiveLeagueUser(user.id)
-        .then(_fetchLeagueUsers);
+    return _fetchActiveLeagueMember(user.id)
+        .then(_fetchLeagueMembers);
 
-    function _fetchActiveLeagueUser(userId) {
-        return LeagueUser.where({userId: userId, isActive: true, isDeleted: false})
+    function _fetchActiveLeagueMember(userId) {
+        return LeagueMember.where({userId: userId, isActive: true, isDeleted: false})
             .fetch();
     }
 
-    function _fetchLeagueUsers(leagueUser)  {
-        return LeagueUser.where({leagueId: leagueUser.get('leagueId'), isActive: true, isDeleted: false})
+    function _fetchLeagueMembers(leagueMember) {
+        return LeagueMember.where({leagueId: leagueMember.get('leagueId'), isActive: true, isDeleted: false})
             .fetchAll({withRelated: ['user']})
-            .then(marshallLeagueUserListAsUsers);
+            .then(marshallLeagueMemberListAsUsers);
     }
 }
 
-function marshallLeagueUserListAsUsers(leagueUsers) {
+function marshallLeagueMemberListAsUsers(leagueMembers) {
     var users = [];
-    if (leagueUsers) {
-        leagueUsers.each(leagueUser => {
-            users.push(marshallLeagueUserAsUser(leagueUser))
+    if (leagueMembers) {
+        leagueMembers.each(leagueMember => {
+            users.push(marshallLeagueMemberAsUser(leagueMember))
         })
     }
     return users;
 }
 
-function marshallLeagueUserAsUser(leagueUser) {
-    if (leagueUser) {
-        var user = leagueUser.related('user');
-        user.set('isLeagueAdmin', leagueUser.get('isAdmin'));
+function marshallLeagueMemberAsUser(leagueMember) {
+    if (leagueMember) {
+        var user = leagueMember.related('user');
+        user.set('isLeagueAdmin', leagueMember.get('isAdmin'));
         return user;
     }
     return null;

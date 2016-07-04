@@ -8,10 +8,11 @@ const Bookshelf = require('../db/bookshelf');
 const Promise = require('bluebird');
 const moment = require('moment');
 const seasonService = require('./seasonService');
+const memberService = require('./memberService');
 
 module.exports = {
     getEvent: getEvent,
-    getEventUsers: getEventUsers,
+    getEventMembers: getEventMembers,
     getEventActivities: getEventActivities,
     saveEventActivity: saveEventActivity,
     deleteEventActivity: deleteEventActivity,
@@ -30,48 +31,56 @@ function getEvent(user, eventId) {
             .innerJoin('league', function () {
                 this.on('season.leagueId', '=', 'league.id')
             })
-            .innerJoin('leagueUser', function () {
-                this.on('league.id', '=', 'leagueUser.leagueId')
-                    .andOn('leagueUser.userId', '=', user.id)
+            .innerJoin('leagueMember', function () {
+                this.on('league.id', '=', 'leagueMember.leagueId')
+                    .andOn('leagueMember.userId', '=', user.id)
             })
             .where('season.isDeleted', false)
             .andWhere('league.isDeleted', false)
-            .andWhere('leagueUser.isDeleted', false)
-            .andWhere('leagueUser.isActive', true)
+            .andWhere('leagueMember.isDeleted', false)
+            .andWhere('leagueMember.isActive', true)
         })
         .fetch({withRelated: ['season', 'hostUser']});
 }
 
-function getEventUsers(user, eventId) {
-    return Bookshelf.knex
-        .select('user.id', 'user.name')
-        .sum('eventBuyins.amount as buyins')
-        .sum('eventResults.amount as results')
-        .from('user')
-        .innerJoin('eventUser', 'user.id', 'eventUser.userId')
+function getEventMembers(user, eventId) {
+    return memberService.getActiveByUser(user)
+        .then(_getEventMembers);
 
-        // Validate Access
-        .innerJoin('event', 'eventUser.eventId', 'event.id')
-        .innerJoin('season', 'event.seasonId', 'season.id')
-        .innerJoin('league', 'season.leagueId', 'league.id')
-        .innerJoin('leagueUser', 'league.id', 'leagueUser.leagueId')
+    function _getEventMembers(currentLeagueMember) {
+        return Bookshelf.knex
+            .select('leagueMember.id', 'leagueMember.name')
+            .sum('eventBuyins.amount as buyins')
+            .sum('eventResults.amount as results')
+            .from('leagueMember')
 
-        // Buyins
-        .leftJoin('eventActivity as eventBuyins', function() {
-            this.on('eventUser.userId', '=', 'eventBuyins.userId')
-                .andOn('eventBuyins.eventActivityTypeId', '=', 2)
-        })
+            // Validate Access
+            .innerJoin('league', 'leagueMember.leagueId', 'league.id')
+            .innerJoin('season', 'league.id', 'season.leagueId')
+            .innerJoin('event', 'season.id', 'event.seasonId')
 
-        // Results
-        .leftJoin('eventActivity as eventResults', function() {
-            this.on('eventUser.userId', '=', 'eventResults.userId')
-                .andOn('eventResults.eventActivityTypeId', '=', 3)
-        })
+            // Buyins
+            .leftJoin('eventActivity as eventBuyins', function() {
+                this.on('leagueMember.id', '=', 'eventBuyins.leagueMemberId')
+                    .andOn('eventBuyins.eventActivityTypeId', '=', EventActivityTypeValues.BUY_IN)
+            })
 
-        .where('eventUser.eventId', eventId)
-        .andWhere('leagueUser.userId', user.id)
-        .groupBy('user.id', 'user.name')
-        .orderBy('results', 'desc');
+            // Results
+            .leftJoin('eventActivity as eventResults', function() {
+                this.on('leagueMember.id', '=', 'eventResults.leagueMemberId')
+                    .andOn('eventResults.eventActivityTypeId', '=', EventActivityTypeValues.FINAL_RESULT)
+            })
+
+            .where('event.id', eventId)
+            .andWhere('league.id', currentLeagueMember.get('leagueId'))
+
+            .groupBy('leagueMember.id', 'leagueMember.name')
+
+            // Only Include members with Buy-ins
+            .having('buyins', '>', 0)
+
+            .orderBy('results', 'desc');
+    }
 }
 
 function getEventActivities(user, eventId) {
@@ -85,18 +94,18 @@ function getEventActivities(user, eventId) {
         .innerJoin('league', function () {
             this.on('season.leagueId', '=', 'league.id')
         })
-        .innerJoin('leagueUser', function () {
-            this.on('league.id', '=', 'leagueUser.leagueId')
-                .andOn('leagueUser.userId', '=', user.id)
+        .innerJoin('leagueMember', function () {
+            this.on('league.id', '=', 'leagueMember.leagueId')
+                .andOn('leagueMember.userId', '=', user.id)
         })
         .where('season.isDeleted', false)
         .andWhere('league.isDeleted', false)
-        .andWhere('leagueUser.isDeleted', false)
-        .andWhere('leagueUser.isActive', true)
+        .andWhere('leagueMember.isDeleted', false)
+        .andWhere('leagueMember.isActive', true)
         .andWhere('event.id', eventId)
         .orderBy('createdDtm', 'desc')
     })
-    .fetchAll({withRelated: ['user', 'eventActivityType', 'createdByUser']});
+    .fetchAll({withRelated: ['leagueMember', 'eventActivityType', 'createdByUser']});
 }
 
 function saveEventActivity(user, eventId, activityIn) {
@@ -205,7 +214,7 @@ function saveEvent(user, eventIn) {
     });
 
     function _validateUser(seasonId, userId) {
-        return seasonService.getSeasonForActiveLeagueUser(seasonId, userId);
+        return seasonService.getSeasonForActiveLeagueMember(seasonId, userId);
     }
 
     function _save(event, hostUserSeason, appUserSeason) {

@@ -71,7 +71,6 @@ function findOrCreateUser(userInfo) {
             } else {
                 return User.forge({
                     email: userInfo.email,
-                    //password: uuid.v1(),
                     name: userInfo.name,
                     facebookId: userInfo.id,
                     facebookToken: userInfo.longLivedToken

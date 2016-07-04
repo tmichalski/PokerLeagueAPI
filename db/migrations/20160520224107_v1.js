@@ -17,18 +17,20 @@ exports.up = function(knex, Promise) {
         knex.schema.createTable("league", function(table) {
             table.increments("id").primary();
             table.string("name").notNullable();
-            table.string("accessCode").notNullable();
             table.boolean("isDeleted").defaultTo(false).notNullable();
             table.integer("createdByUserId").unsigned().notNullable();
             table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
             table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
 
-        // LEAGUE USER
-        knex.schema.createTable("leagueUser", function(table) {
+        // LEAGUE MEMBER
+        knex.schema.createTable("leagueMember", function(table) {
             table.increments("id").primary();
             table.integer("leagueId").unsigned().notNullable().references("league.id");
-            table.integer("userId").unsigned().notNullable().references("user.id");
+            table.integer("userId").unsigned().nullable().references("user.id");
+            table.string("name").notNullable();
+            table.string("email").nullable();
+            table.string("accessCode").notNullable();
             table.boolean("isAdmin").defaultTo(false).notNullable();
             table.boolean("isActive").defaultTo(true).notNullable();
             table.boolean("isDeleted").defaultTo(false).notNullable();
@@ -79,7 +81,7 @@ exports.up = function(knex, Promise) {
         knex.schema.createTable("eventActivity", function(table) {
             table.increments("id").primary();
             table.integer("eventId").unsigned().notNullable().references("event.id");
-            table.integer("userId").unsigned().notNullable().references("user.id");
+            table.integer("leagueMemberId").unsigned().notNullable().references("leagueMember.id");
             table.integer("eventActivityTypeId").unsigned().notNullable().references("eventActivityType.id");
             table.string("note", 300);
             table.decimal("amount", 7, 2).nullable();
@@ -98,7 +100,7 @@ exports.down = function(knex, Promise) {
         knex.schema.dropTable("eventUser"),
         knex.schema.dropTable("event"),
         knex.schema.dropTable("season"),
-        knex.schema.dropTable("leagueUser"),
+        knex.schema.dropTable("leagueMember"),
         knex.schema.dropTable("league"),
         knex.schema.dropTable("user")
     ]);

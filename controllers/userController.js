@@ -3,19 +3,19 @@
 const userService = require('../services/userService');
 
 module.exports = {
-    list: list,
-    get: get
+    list: listUser,
+    get: getUser
 };
 
 ///////////////
 
-function list(req, res) {
+function listUser(req, res) {
     userService.list(req.user).then(function (users) {
         res.json(users);
     })
 }
 
-function get(req, res) {
+function getUser(req, res) {
     userService.getByCurrentUserAndUserId(req.user, req.params.id).then(function (user) {
         res.json(user);
     });

@@ -30,7 +30,7 @@ function create(req, res) {
 }
 
 function getLeague(req, res) {
-    leagueService.getActiveLeague(req.user).then(leagueUser => {
-        res.json(leagueUser);
+    leagueService.getActiveLeagueMember(req.user).then(leagueMember => {
+        res.json(leagueMember);
     });
 }

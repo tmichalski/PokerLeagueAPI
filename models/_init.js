@@ -13,7 +13,7 @@ require('./eventActivityTypeValues');
 require('./eventUser');
 
 require('./league');
-require('./leagueUser');
+require('./leagueMember');
 
 require('./season');
 

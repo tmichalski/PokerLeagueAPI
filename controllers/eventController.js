@@ -5,7 +5,7 @@ const eventService = require('../services/eventService');
 module.exports = {
     get: getEvent,
     save: saveEvent,
-    users: getEventUsers,
+    members: getEventMembers,
     activities: getEventActivities,
     saveActivity: saveEventActivity,
     deleteActivity: deleteEventActivity
@@ -20,8 +20,8 @@ function getEvent(req, res) {
         });
 }
 
-function getEventUsers(req, res) {
-    eventService.getEventUsers(req.user, req.params.id)
+function getEventMembers(req, res) {
+    eventService.getEventMembers(req.user, req.params.id)
         .then(eventUsers => {
             res.json(eventUsers);
         });

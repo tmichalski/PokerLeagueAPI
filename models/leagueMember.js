@@ -2,10 +2,10 @@
 
 const bookshelf = require('../db/bookshelf');
 
-var leagueUser = bookshelf.Model.extend({
-    tableName: 'leagueUser',
+var leagueMember = bookshelf.Model.extend({
+    tableName: 'leagueMember',
 
-    visible: ['isAdmin', 'isActive', 'league', 'user'],
+    visible: ['id', 'name', 'email', 'isAdmin', 'isActive', 'league', 'user', 'accessCode'],
 
     parse : function (response) {
         response.isAdmin = !!response.isAdmin;
@@ -24,4 +24,4 @@ var leagueUser = bookshelf.Model.extend({
 
 });
 
-module.exports = bookshelf.model('LeagueUser', leagueUser);
+module.exports = bookshelf.model('LeagueMember', leagueMember);

@@ -7,7 +7,7 @@ const port = process.env.PORT || 8080;
 
 require('./config/routeHandlers')(app);
 
-require('./config/routes')(app);
+require('./routes')(app);
 
 console.log('-----------------------------------');
 console.log('\u2662 Poker League API v' + getVersion());
