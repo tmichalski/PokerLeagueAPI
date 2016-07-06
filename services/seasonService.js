@@ -87,17 +87,11 @@ function listSeasons(user) {
 
 function addSeason(user, year, isActive) {
     return leagueService.getActiveLeagueMember(user)
-        .then(leagueMember => {
-            if (leagueMember) {
-                return _save(leagueMember.leagueId, year, isActive);
-            } else {
-                return null;
-            }
-        });
+        .then(_save);
 
-    function _save(leagueId, year, isActive) {
+    function _save(leagueMember) {
         return new Season({
-                leagueId: leagueId,
+                leagueId: leagueMember.get('leagueId'),
                 year: year,
                 isActive: isActive || false
             })
@@ -149,23 +143,34 @@ function deleteSeason(user, seasonId) {
         });
 
     function Delete(seasonId) {
-        return Season.forge({id: seasonId})
-            .save({isDeleted: true, isActive: false})
-            .then(function (season) {
-                // If the season was active, then find the highest not deleted year value and set that as active.
-                if (isActive) {
-                    Bookshelf.knex.raw(
-                        'UPDATE season SET isActive = true ' +
-                        'WHERE id != ? AND isDeleted = false AND year = (SELECT MAX(year) FROM season)', [seasonId])
-                        .then(function (resp) {
-                            // Do nothing to invoke the raw statement
-                        })
-                        .catch(function (err) {
-                            console.log("SQL Raw error: ");
-                            console.log(err.stack);
-                        });
-                }
-            });
+        return _getSeason()
+            .then(_updateSeason)
+            .then(_updateActiveSeason);
+
+        function _getSeason() {
+            return Season.forge({id: seasonId}).fetch();
+        }
+
+        function _updateSeason(season) {
+            season.set('isDeleted', true);
+            season.set('isActive', false);
+            return season.save();
+        }
+
+        function _updateActiveSeason(season) {
+            if (season.get('isActive')) {
+                Bookshelf.knex.raw(
+                    'UPDATE season SET isActive = true ' +
+                    'WHERE id != ? AND isDeleted = false AND year = (SELECT MAX(year) FROM season)', [seasonId])
+                    .then(function (resp) {
+                        // Do nothing to invoke the raw statement
+                    })
+                    .catch(function (err) {
+                        console.log("SQL Raw error: ");
+                        console.log(err.stack);
+                    });
+            }
+        }
     }
 }
 

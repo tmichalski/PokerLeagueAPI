@@ -28,8 +28,8 @@ function get(currentUser, leagueMemberId) {
     return getActiveByUser(currentUser)
         .then(_getMember);
 
-    function _getMember(league) {
-        return LeagueMember.where({leagueId: league.id, id: leagueMemberId, isDeleted: false}).fetch();
+    function _getMember(currentLeagueMember) {
+        return LeagueMember.where({leagueId: currentLeagueMember.get('leagueId'), id: leagueMemberId, isDeleted: false}).fetch();
     }
 }
 
@@ -87,6 +87,7 @@ function list(currentUser) {
                     .andOn('eventActivity.eventActivityTypeId', '=', EventActivityTypes.FINAL_RESULT)
             })
             .where('leagueMember.leagueId', leagueMember.get('leagueId'))
+            .andWhere('leagueMember.isDeleted', false)
             .groupBy('leagueMember.id')
             .orderBy('winnings', 'desc');
     }

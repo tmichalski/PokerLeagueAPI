@@ -19,8 +19,8 @@ module.exports = {
 
 function getActiveLeagueMember(user) {
     return LeagueMember.where({userId: user.id, isActive: true, isDeleted: false})
-        .fetch({withRelated: ['league']})
         .orderBy('leagueId')
+        .fetch({withRelated: ['league']})
         .catch(error => console.log("getActiveLeagueMember(user): Error retrieving LeagueMember for user_id=" + user.id, error));
 }
 
