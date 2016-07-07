@@ -72,6 +72,8 @@ function getEventMembers(user, eventId) {
             })
 
             .where('event.id', eventId)
+            .andWhere('eventBuyins.eventId', eventId)
+            .andWhere('eventResults.eventId', eventId)
             .andWhere('league.id', currentLeagueMember.get('leagueId'))
 
             .groupBy('leagueMember.id', 'leagueMember.name')
@@ -112,40 +114,45 @@ function saveEventActivity(user, eventId, activityIn) {
     var tasks = [
         getEvent(user, eventId),
         _validateType(activityIn.type),
-        _validateUser(activityIn.userId),
+        _getCurrentMember(user),
+        _validateMember(activityIn.leagueMemberId),
         _getActivity(eventId, activityIn.activityId)
     ];
 
     return Promise.all(tasks).then(values => {
-        var [event, type, activityUser, eventActivity] = values;
-        return _save(event, type, activityUser, eventActivity);
+        var [event, type, currentMember, activityMember, eventActivity] = values;
+        return _save(event, type, currentMember, activityMember, eventActivity);
     });
 
     function _validateType(typeId) {
        return EventActivityType.where({id: typeId}).fetch();
     }
 
-    function _validateUser(userId) {
-        return userId ? getEvent({id: userId}, eventId) : null
+    function _getCurrentMember(user) {
+        return memberService.getActiveByUser(user);
+    }
+
+    function _validateMember(leagueMemberId) {
+        return leagueMemberId ? memberService.get(user, leagueMemberId) : null
     }
 
     function _getActivity(eventId, activityId) {
         return EventActivity.where({id: activityId, eventId: eventId}).fetch();
     }
 
-    function _save(event, type, activityUser, eventActivity) {
+    function _save(event, type, currentMember, activityMember, eventActivity) {
         if (!event || !type) {
             console.log("saveEventActivity: Event or activity type not found. Aborting.");
             return {error: "Invalid event and/or event type provided."}
         }
 
         if (EventActivityTypeValues.NOTE == type.id) {
-            activityUser = user;
+            activityMember = currentMember;
         }
 
-        if (!activityUser) {
-            console.log("saveEventActivity: Invalid user. Aborting.");
-            return {error: "Invalid event user provided."}
+        if (!activityMember) {
+            console.log("saveEventActivity: Invalid league member. Aborting.");
+            return {error: "Invalid event league member provided."}
         }
 
 
@@ -154,7 +161,7 @@ function saveEventActivity(user, eventId, activityIn) {
                 eventActivityTypeId: type.id,
                 note: activityIn.note,
                 amount: activityIn.amount,
-                userId: activityUser.id,
+                leagueMemberId: activityMember.id,
                 createdByUserId: user.id
             })    
         } else {
@@ -163,7 +170,7 @@ function saveEventActivity(user, eventId, activityIn) {
                 eventActivityTypeId: type.id,
                 note: activityIn.note,
                 amount: activityIn.amount,
-                userId: activityUser.id,
+                leagueMemberId: activityMember.id,
                 createdByUserId: user.id
             }).save();
         }

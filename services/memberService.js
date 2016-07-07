@@ -29,7 +29,11 @@ function get(currentUser, leagueMemberId) {
         .then(_getMember);
 
     function _getMember(currentLeagueMember) {
-        return LeagueMember.where({leagueId: currentLeagueMember.get('leagueId'), id: leagueMemberId, isDeleted: false}).fetch();
+        if ("current" == leagueMemberId) {
+            return currentLeagueMember;
+        } else {
+            return LeagueMember.where({leagueId: currentLeagueMember.get('leagueId'), id: leagueMemberId, isDeleted: false}).fetch();
+        }
     }
 }
 
