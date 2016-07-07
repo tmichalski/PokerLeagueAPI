@@ -55,18 +55,9 @@ exports.up = function(knex, Promise) {
         knex.schema.createTable("event", function(table) {
             table.increments("id").primary();
             table.integer("seasonId").unsigned().notNullable().references("season.id");
-            table.integer("hostUserId").unsigned().notNullable().references("user.id");
+            table.integer("hostMemberId").unsigned().notNullable().references("leagueMember.id");
             table.string("name").nullable();
             table.datetime("eventDate").notNullable();
-            table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
-            table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
-        }),
-
-        // EVENT USER
-        knex.schema.createTable("eventUser", function(table) {
-            table.increments("id").primary();
-            table.integer("eventId").unsigned().notNullable().references("event.id");
-            table.integer("userId").unsigned().notNullable().references("user.id");
             table.timestamp("createdDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP')).notNullable();
             table.timestamp("lastUpdatedDtm").defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')).notNullable();
         }),
@@ -97,7 +88,6 @@ exports.down = function(knex, Promise) {
     return Promise.all([
         knex.schema.dropTable("eventActivity"),
         knex.schema.dropTable("eventActivityType"),
-        knex.schema.dropTable("eventUser"),
         knex.schema.dropTable("event"),
         knex.schema.dropTable("season"),
         knex.schema.dropTable("leagueMember"),

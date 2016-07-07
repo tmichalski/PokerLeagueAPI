@@ -6,14 +6,14 @@ const bookshelf = require('../db/bookshelf');
 var event = bookshelf.Model.extend({
     tableName: 'event',
 
-    visible: ['id', 'name', 'eventDate', 'season', 'hostUser', 'eventUsers', 'eventActivities'],
+    visible: ['id', 'name', 'eventDate', 'season', 'hostMember', 'eventUsers', 'eventActivities'],
 
     season: function() {
         return this.belongsTo('Season', 'seasonId');
     },
 
-    hostUser: function() {
-        return this.belongsTo('User', 'hostUserId');
+    hostMember: function() {
+        return this.belongsTo('LeagueMember', 'hostMemberId');
     },
 
     eventActivities: function() {

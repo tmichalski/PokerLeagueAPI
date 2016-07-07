@@ -12,6 +12,7 @@ module.exports = {
     add: addSeason,
     update: updateSeason,
     delete: deleteSeason,
+    getSeasonForActiveLeagueUser: getSeasonForActiveLeagueUser,
     getSeasonForActiveLeagueMember: getSeasonForActiveLeagueMember
 };
 
@@ -36,7 +37,7 @@ function getSeason(user, seasonId) {
             .andWhere('leagueMember.isDeleted', false)
             .andWhere('leagueMember.isActive', true)
         })
-        .fetch({withRelated: ['firstPlaceUser', 'events.hostUser', 'league']})
+        .fetch({withRelated: ['firstPlaceUser', 'events.hostMember', 'league']})
         .then(_queryForRankings)
         .then(_packageResults);
 
@@ -101,7 +102,7 @@ function addSeason(user, year, isActive) {
 
 function updateSeason(user, seasonId, year, isActive) {
     // TODO This could be combined into a single UPDATE statement that would both verify the season belonging to the user and update.
-    return getSeasonForActiveLeagueMember(seasonId, user.id)
+    return getSeasonForActiveLeagueUser(seasonId, user.id)
         .then(season => {
             if (season) {
                 return _save(seasonId, year, isActive);
@@ -174,11 +175,28 @@ function deleteSeason(user, seasonId) {
     }
 }
 
-function getSeasonForActiveLeagueMember(seasonId, userId) {
+function getSeasonForActiveLeagueMember(seasonId, leagueMemberId) {
     return Season.forge({id: seasonId}).query(function (q) {
             q.innerJoin('league', function () {
                 this.on('season.leagueId', '=', 'league.id')
             })
+            .innerJoin('leagueMember', function () {
+                this.on('league.id', '=', 'leagueMember.leagueId')
+                    .andOn('leagueMember.id', '=', leagueMemberId)
+            })
+            .where('season.isDeleted', false)
+            .andWhere('league.isDeleted', false)
+            .andWhere('leagueMember.isDeleted', false)
+            .andWhere('leagueMember.isActive', true)
+    })
+    .fetch();
+}
+
+function getSeasonForActiveLeagueUser(seasonId, userId) {
+    return Season.forge({id: seasonId}).query(function (q) {
+        q.innerJoin('league', function () {
+            this.on('season.leagueId', '=', 'league.id')
+        })
             .innerJoin('leagueMember', function () {
                 this.on('league.id', '=', 'leagueMember.leagueId')
                     .andOn('leagueMember.userId', '=', userId)
@@ -188,8 +206,9 @@ function getSeasonForActiveLeagueMember(seasonId, userId) {
             .andWhere('leagueMember.isDeleted', false)
             .andWhere('leagueMember.isActive', true)
     })
-    .fetch();
+        .fetch();
 }
+
 
 function marshallRankings(ranking) {
     if (ranking == undefined) return;

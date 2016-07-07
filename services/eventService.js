@@ -40,7 +40,7 @@ function getEvent(user, eventId) {
             .andWhere('leagueMember.isDeleted', false)
             .andWhere('leagueMember.isActive', true)
         })
-        .fetch({withRelated: ['season', 'hostUser']});
+        .fetch({withRelated: ['season', 'hostMember']});
 }
 
 function getEventMembers(user, eventId) {
@@ -48,6 +48,7 @@ function getEventMembers(user, eventId) {
         .then(_getEventMembers);
 
     function _getEventMembers(currentLeagueMember) {
+        eventId = parseInt(eventId);
         return Bookshelf.knex
             .select('leagueMember.id', 'leagueMember.name')
             .sum('eventBuyins.amount as buyins')
@@ -63,23 +64,24 @@ function getEventMembers(user, eventId) {
             .leftJoin('eventActivity as eventBuyins', function() {
                 this.on('leagueMember.id', '=', 'eventBuyins.leagueMemberId')
                     .andOn('eventBuyins.eventActivityTypeId', '=', EventActivityTypeValues.BUY_IN)
+                    .andOn('eventBuyins.eventId', '=', eventId)
             })
 
             // Results
             .leftJoin('eventActivity as eventResults', function() {
                 this.on('leagueMember.id', '=', 'eventResults.leagueMemberId')
                     .andOn('eventResults.eventActivityTypeId', '=', EventActivityTypeValues.FINAL_RESULT)
+                    .andOn('eventResults.eventId', '=', eventId)
             })
 
             .where('event.id', eventId)
-            .andWhere('eventBuyins.eventId', eventId)
-            .andWhere('eventResults.eventId', eventId)
             .andWhere('league.id', currentLeagueMember.get('leagueId'))
 
             .groupBy('leagueMember.id', 'leagueMember.name')
 
             // Only Include members with Buy-ins
             .having('buyins', '>', 0)
+            .orHaving('results', '>', 0)
 
             .orderBy('results', 'desc');
     }
@@ -148,13 +150,16 @@ function saveEventActivity(user, eventId, activityIn) {
 
         if (EventActivityTypeValues.NOTE == type.id) {
             activityMember = currentMember;
+        } else if (EventActivityTypeValues.BUY_IN == type.id) {
+            activityIn.note = activityMember.get('name') + " buys in for $" + activityIn.amount;
+        } else if (EventActivityTypeValues.FINAL_RESULT == type.id) {
+            activityIn.note = activityMember.get('name') + " final result is $" + activityIn.amount;
         }
 
         if (!activityMember) {
             console.log("saveEventActivity: Invalid league member. Aborting.");
             return {error: "Invalid event league member provided."}
         }
-
 
         if (eventActivity) {
             return eventActivity.save({
@@ -211,32 +216,36 @@ function deleteEventActivity(user, eventId, eventActivityId) {
 function saveEvent(user, eventIn) {
     var tasks = [
         getEvent(user, eventIn.id),
-        _validateUser(eventIn.seasonId, eventIn.hostUserId),
+        _validateMember(eventIn.seasonId, eventIn.hostMemberId),
         _validateUser(eventIn.seasonId, user.id)
     ];
 
     return Promise.all(tasks).then(values => {
-        var [event, hostUserSeason, appUserSeason] = values;
-        return _save(event, hostUserSeason, appUserSeason);
+        var [event, hostMemberSeason, appUserSeason] = values;
+        return _save(event, hostMemberSeason, appUserSeason);
     });
 
-    function _validateUser(seasonId, userId) {
-        return seasonService.getSeasonForActiveLeagueMember(seasonId, userId);
+    function _validateMember(seasonId, leagueMemberId) {
+        return seasonService.getSeasonForActiveLeagueMember(seasonId, leagueMemberId);
     }
 
-    function _save(event, hostUserSeason, appUserSeason) {
+    function _validateUser(seasonId, userId) {
+        return seasonService.getSeasonForActiveLeagueUser(seasonId, userId);
+    }
+
+    function _save(event, hostMemberSeason, appUserSeason) {
         if (!appUserSeason) {
             return {error: "Invalid season provided."}
         }
 
-        if (!hostUserSeason) {
-            return {error: "Invalid event host user provided."}
+        if (!hostMemberSeason) {
+            return {error: "Invalid event host member provided."}
         }
 
         if (event) {
             return event.save({
                 name: eventIn.name,
-                hostUserId: eventIn.hostUserId,
+                hostMemberId: eventIn.hostMemberId,
                 eventDate: moment(eventIn.eventDate).toDate()
             })
         } else {
@@ -244,7 +253,7 @@ function saveEvent(user, eventIn) {
                 seasonId: eventIn.seasonId,
                 name: eventIn.name,
                 eventDate: moment(eventIn.eventDate).toDate(),
-                hostUserId: eventIn.hostUserId
+                hostMemberId: eventIn.hostMemberId
             }).save();
         }
     }
