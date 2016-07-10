@@ -107,7 +107,7 @@ function getEventActivities(user, eventId) {
         .andWhere('leagueMember.isDeleted', false)
         .andWhere('leagueMember.isActive', true)
         .andWhere('event.id', eventId)
-        .orderBy('createdDtm', 'desc')
+        .orderBy('createdDtm', 'asc')
     })
     .fetchAll({withRelated: ['leagueMember', 'eventActivityType', 'createdByUser']});
 }
