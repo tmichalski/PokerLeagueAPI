@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const moment = require('moment');
 const Bookshelf = require('../db/bookshelf');
 const Season = require('../models/season');
 const leagueService = require('../services/leagueService');
@@ -37,8 +38,9 @@ function getSeason(user, seasonId) {
             .andWhere('leagueMember.isDeleted', false)
             .andWhere('leagueMember.isActive', true)
         })
-        .fetch({withRelated: ['firstPlaceUser', 'events.hostMember', 'league']})
+        .fetch({withRelated: ['league']})
         .then(_queryForRankings)
+        .then(_queryForEvents)
         .then(_packageResults);
 
     function _queryForRankings(season) {
@@ -49,7 +51,10 @@ function getSeason(user, seasonId) {
             .innerJoin('league', 'leagueMember.leagueId', 'league.id')
             .innerJoin('season', 'league.id', 'season.leagueId')
             .innerJoin('event', 'season.id', 'event.seasonId')
-            .leftJoin('eventActivity', 'event.id', 'eventActivity.eventId')
+            .innerJoin('eventActivity', function () {
+                this.on('event.id', '=', 'eventActivity.eventId')
+                    .andOn('leagueMember.id', '=', 'eventActivity.leagueMemberId')
+            })
             .where('season.id', season.get('id'))
             .andWhere('eventActivity.eventActivityTypeId', EventActivityTypes.FINAL_RESULT)
             .andWhere('leagueMember.isActive', true)
@@ -60,30 +65,90 @@ function getSeason(user, seasonId) {
             });
     }
 
-    function _packageResults(seasonAndRankingsArray) {
-        var [seasonRow, rankingsRows] = seasonAndRankingsArray;
+    function _queryForEvents(seasonAndRankings) {
+        var [season, rankings] = seasonAndRankings;
+
+        var subselect = Bookshelf.knex
+            .select('event.id', 'leagueMember.id as leagueMemberId', 'leagueMember.name as leagueMemberName')
+            .sum('eventActivity.amount as winnings')
+            .from('event')
+            .innerJoin('eventActivity', function () {
+                this.on('event.id', '=', 'eventActivity.eventId')
+                    .andOn('eventActivity.eventActivityTypeId', '=', EventActivityTypes.FINAL_RESULT)
+            })
+            .innerJoin('leagueMember', 'eventActivity.leagueMemberId', 'leagueMember.id')
+            .where('event.seasonId', season.get('id'))
+            .groupBy('event.id', 'leagueMember.id')
+            .orderBy('winnings', 'desc');
+
+        return Bookshelf.knex
+            .select('event.id', 'event.seasonId', 'event.eventDate', 'leagueMember.name as hostName',
+                'a.leagueMemberName as firstPlaceWinner',
+                'a.winnings as firstPlaceWinnings')
+            .from('event')
+            .innerJoin('leagueMember', 'event.hostMemberId', 'leagueMember.id')
+            .leftJoin(subselect.clone().as('a'), function() {
+                this.on('event.id', '=', 'a.id')
+            })
+            .leftJoin(subselect.clone().as('b'), function() {
+                this.on('a.id', '=', 'b.id')
+                    .andOn('a.winnings', '<', 'b.winnings')
+            })
+            .whereNull('b.winnings')
+            .andWhere('event.seasonId', season.get('id'))
+            .orderBy('event.eventDate', 'asc')
+            .then(events => {
+                return [season, rankings, events]
+            });
+    }
+
+    function _packageResults(results) {
+        var [seasonRow, rankingsRows, eventRows] = results;
         var season = seasonRow.serialize();
         season.rankings = marshallRankings(rankingsRows);
+        season.events = marshallEvents(eventRows);
         return season;
     }
 }
 
 function listSeasons(user) {
-    return Season.query(function (q) {
-            q.innerJoin('league', function () {
-                this.on('season.leagueId', '=', 'league.id')
+    return leagueService.getActiveLeagueMember(user)
+        .then(_listSeasons);
+
+    function _listSeasons(leagueMember) {
+        var subselect = Bookshelf.knex
+            .select('season.id', 'leagueMember.id as leagueMemberId', 'leagueMember.name as leagueMemberName')
+            .sum('eventActivity.amount as winnings')
+            .from('season')
+            .innerJoin('event', 'season.id', 'event.seasonId')
+            .innerJoin('eventActivity', function () {
+                this.on('event.id', '=', 'eventActivity.eventId')
+                    .andOn('eventActivity.eventActivityTypeId', '=', EventActivityTypes.FINAL_RESULT)
             })
-            .innerJoin('leagueMember', function () {
-                this.on('league.id', '=', 'leagueMember.leagueId')
-                    .andOn('leagueMember.userId', '=', user.id)
-            })
-            .where('season.isDeleted', false)
-            .andWhere('league.isDeleted', false)
-            .andWhere('leagueMember.isDeleted', false)
-            .andWhere('leagueMember.isActive', true)
+            .innerJoin('leagueMember', 'eventActivity.leagueMemberId', 'leagueMember.id')
+            .where('season.leagueId', leagueMember.get('leagueId'))
+            .groupBy('season.id', 'leagueMember.id')
+            .orderBy('winnings', 'desc');
+
+
+        return Season.query(function(q) {
+            q.column('season.id', 'season.year', 'season.isActive',
+                    'a.leagueMemberId as firstPlaceLeagueMemberId',
+                    'a.leagueMemberName as firstPlaceLeagueMemberName',
+                    'a.winnings as firstPlaceWinnings')
+                .leftJoin(subselect.clone().as('a'), function() {
+                    this.on('season.id', '=', 'a.id')
+                })
+                .leftJoin(subselect.clone().as('b'), function() {
+                    this.on('a.id', '=', 'b.id')
+                        .andOn('a.winnings', '<', 'b.winnings')
+                })
+                .whereNull('b.winnings')
+                .andWhere('season.leagueId', leagueMember.get('leagueId'));
         })
-        .orderBy('year', 'DESC')
-        .fetchAll({withRelated: ['firstPlaceUser']});
+        .orderBy('season.year', 'desc')
+        .fetchAll();
+    }
 }
 
 function addSeason(user, year, isActive) {
@@ -209,7 +274,6 @@ function getSeasonForActiveLeagueUser(seasonId, userId) {
         .fetch();
 }
 
-
 function marshallRankings(ranking) {
     if (ranking == undefined) return;
     var out = [];
@@ -221,6 +285,22 @@ function marshallRankings(ranking) {
                 name: rank.name
             },
             winnings: rank.winnings
+        });
+    });
+    return out;
+}
+
+function marshallEvents(events) {
+    if (events == undefined) return;
+    var out = [];
+    _(events).each(function (event) {
+        out.push({
+            id: event.id,
+            seasonId: event.seasonId,
+            eventDate: moment(event.eventDate).format('YYYY-MM-DDTHH:mm'),
+            hostName: event.hostName,
+            firstPlaceWinner: event.firstPlaceWinner,
+            firstPlaceWinnings: event.firstPlaceWinnings
         });
     });
     return out;
