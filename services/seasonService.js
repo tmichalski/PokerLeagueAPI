@@ -93,6 +93,8 @@ function getSeason(user, seasonId) {
             .leftJoin(subselect.clone().as('b'), function() {
                 this.on('a.id', '=', 'b.id')
                     .andOn('a.winnings', '<', 'b.winnings')
+                    .orOn('a.winnings', '=', 'b.winnings')
+                    .andOn('a.leagueMemberId', '>', 'b.leagueMemberId')
             })
             .whereNull('b.winnings')
             .andWhere('event.seasonId', season.get('id'))
