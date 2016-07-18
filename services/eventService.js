@@ -88,8 +88,7 @@ function getEventMembers(user, eventId) {
             .andWhere('league.id', currentLeagueMember.get('leagueId'))
 
             // Only Include members with Buy-ins
-            .having('buyins', '>', 0)
-            .orHaving('results', '>', 0)
+            .havingRaw('buyins IS NOT NULL OR results IS NOT NULL')
 
             .orderBy('results', 'desc');
     }
