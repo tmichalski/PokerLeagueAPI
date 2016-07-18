@@ -49,10 +49,24 @@ function getEventMembers(user, eventId) {
 
     function _getEventMembers(currentLeagueMember) {
         eventId = parseInt(eventId);
+
+        var buyinsSelect = Bookshelf.knex
+            .select('leagueMemberId').sum('amount as amount')
+            .from('eventActivity')
+            .where('eventActivityTypeId', 2)
+            .andWhere('eventId', eventId)
+            .groupBy('leagueMemberId');
+
+        var resultsSelect = Bookshelf.knex
+            .select('leagueMemberId').sum('amount as amount')
+            .from('eventActivity')
+            .where('eventActivityTypeId', 3)
+            .andWhere('eventId', eventId)
+            .groupBy('leagueMemberId');
+
+
         return Bookshelf.knex
-            .select('leagueMember.id', 'leagueMember.name')
-            .sum('eventBuyins.amount as buyins')
-            .sum('eventResults.amount as results')
+            .select('leagueMember.id', 'leagueMember.name', 'buyins.amount as buyins', 'results.amount as results')
             .from('leagueMember')
 
             // Validate Access
@@ -61,23 +75,17 @@ function getEventMembers(user, eventId) {
             .innerJoin('event', 'season.id', 'event.seasonId')
 
             // Buyins
-            .leftJoin('eventActivity as eventBuyins', function() {
-                this.on('leagueMember.id', '=', 'eventBuyins.leagueMemberId')
-                    .andOn('eventBuyins.eventActivityTypeId', '=', EventActivityTypeValues.BUY_IN)
-                    .andOn('eventBuyins.eventId', '=', eventId)
+            .leftJoin(buyinsSelect.as("buyins"), function() {
+                this.on('leagueMember.id', '=', 'buyins.leagueMemberId')
             })
 
             // Results
-            .leftJoin('eventActivity as eventResults', function() {
-                this.on('leagueMember.id', '=', 'eventResults.leagueMemberId')
-                    .andOn('eventResults.eventActivityTypeId', '=', EventActivityTypeValues.FINAL_RESULT)
-                    .andOn('eventResults.eventId', '=', eventId)
+            .leftJoin(resultsSelect.as("results"), function() {
+                this.on('leagueMember.id', '=', 'results.leagueMemberId')
             })
 
             .where('event.id', eventId)
             .andWhere('league.id', currentLeagueMember.get('leagueId'))
-
-            .groupBy('leagueMember.id', 'leagueMember.name')
 
             // Only Include members with Buy-ins
             .having('buyins', '>', 0)
